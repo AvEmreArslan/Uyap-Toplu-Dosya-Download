@@ -1,0 +1,22 @@
+# OS / OneDrive
+Thumbs.db
+ehthumbs.db
+Desktop.ini
+$RECYCLE.BIN/
+.DS_Store
+*.lnk
+
+# Editor
+.vscode/
+.idea/
+*.swp
+*.swo
+
+# Logs / temp
+*.log
+*.tmp
+*~
+
+# Cursor agent artifacts
+.cursor/
+agent-transcripts/
