@@ -1,5 +1,5 @@
 /* ============================================================================
- *  UYAP Toplu Evrak İndirici  -  main.js  (v2.0.0)
+ *  Uyap+ Toplu Evrak İndirici — main.js
  *  https://avukat.uyap.gov.tr
  * ============================================================================ */
 
@@ -20,11 +20,13 @@
     primary: '#0b3d91', primaryHover: '#082e6e', accent: '#2563eb',
     accentSoft: '#3b82f6', accent2: '#60a5fa',
     ok: '#10b981', warn: '#f59e0b', err: '#ef4444',
-    bg: '#ffffff', panel: '#f8fafc', surface: '#ffffff',
+    bg: '#ffffff', panel: '#f4f6f9', surface: '#ffffff',
     border: '#e2e8f0', borderStrong: '#cbd5e1',
     text: '#0f172a', textSoft: '#334155', muted: '#64748b',
     logBg: '#0b1220', logText: '#cbd5e1',
     yellow: '#ffd54f',
+    shadow: '0 4px 24px -4px rgba(15, 23, 42, 0.08), 0 12px 48px -12px rgba(15, 23, 42, 0.12)',
+    shadowStrong: '0 25px 50px -12px rgba(15, 23, 42, 0.18)',
   };
 
   const STORAGE_KEY     = 'uyapBulk:lastDownload';
@@ -89,17 +91,16 @@
   .uyap-bulk-fab.attention { animation: uyap-bulk-pulse 1.8s ease-in-out infinite; }
 
   .uyap-bulk-panel {
-    position: fixed; left: 20px; bottom: 80px; z-index: 2147483647;
-    width: 520px; max-width: calc(100vw - 40px);
-    max-height: 84vh;
+    position: fixed; left: 24px; bottom: 88px; z-index: 2147483647;
+    width: 600px; max-width: calc(100vw - 48px);
+    max-height: 88vh;
     background: ${C.bg}; color: ${C.text};
-    border: 1px solid ${C.border}; border-radius: 18px;
-    box-shadow:
-      0 24px 64px -12px rgba(15, 23, 42, 0.30),
-      0 8px 24px -8px rgba(15, 23, 42, 0.18);
+    border: 1px solid rgba(226, 232, 240, 0.95); border-radius: 22px;
+    box-shadow: ${C.shadowStrong};
     display: flex; flex-direction: column; overflow: hidden;
-    font: 13px/1.5 -apple-system, "Segoe UI", Roboto, system-ui, sans-serif;
-    animation: uyap-bulk-fadeup .25s ease;
+    font: 14px/1.55 -apple-system, "Segoe UI", Roboto, "Segoe UI Variable", system-ui, sans-serif;
+    letter-spacing: -0.01em;
+    animation: uyap-bulk-fadeup .28s cubic-bezier(0.22, 1, 0.36, 1);
   }
   .uyap-bulk-panel[hidden] { display: none; }
 
@@ -109,11 +110,12 @@
   }
 
   .uyap-bulk-header {
-    padding: 14px 16px;
-    background: linear-gradient(135deg, ${C.primary} 0%, ${C.accent} 75%, ${C.accent2} 100%);
+    padding: 18px 22px;
+    background: linear-gradient(125deg, #071d42 0%, ${C.primary} 32%, ${C.accent} 70%, #7dd3fc 165%);
     color: #fff;
     display: flex; align-items: center; justify-content: space-between;
-    gap: 8px;
+    gap: 12px;
+    flex-shrink: 0;
   }
   .uyap-bulk-header-actions {
     display: flex; align-items: center; gap: 4px;
@@ -130,14 +132,14 @@
     box-shadow: 0 0 12px rgba(255, 213, 79, 0.5);
     transform: rotate(-12deg);
   }
-  .uyap-bulk-header h3 { margin: 0; font-size: 14px; font-weight: 700; letter-spacing: .2px; }
+  .uyap-bulk-header h3 { margin: 0; font-size: 16px; font-weight: 750; letter-spacing: -0.02em; line-height: 1.25; }
   .uyap-bulk-header .brand { font-weight: 800; }
   .uyap-bulk-header .brand-plus {
     color: #ffd54f; font-weight: 800;
     text-shadow: 0 0 8px rgba(255, 213, 79, 0.45); margin-right: 2px;
   }
   .uyap-bulk-header .brand-sub { font-weight: 500; opacity: .85; }
-  .uyap-bulk-header .sub { display: block; font-size: 11px; font-weight: 500; opacity: .85; margin-top: 2px; }
+  .uyap-bulk-header .sub { display: block; font-size: 12px; font-weight: 500; opacity: .88; margin-top: 4px; letter-spacing: 0; line-height: 1.35; }
   .uyap-bulk-close {
     background: rgba(255, 255, 255, .15); border: 0; color: #fff; cursor: pointer;
     width: 28px; height: 28px; border-radius: 8px; font-size: 18px; line-height: 1;
@@ -146,16 +148,17 @@
   .uyap-bulk-close:hover { background: rgba(255, 255, 255, .28); }
 
   .uyap-bulk-statusbar {
-    padding: 8px 14px; background: ${C.panel};
+    padding: 12px 22px; background: linear-gradient(180deg, #eef2f7 0%, ${C.panel} 100%);
     border-bottom: 1px solid ${C.border};
-    display: flex; align-items: center; gap: 8px;
-    font-size: 11.5px; color: ${C.textSoft}; font-weight: 500;
-    overflow-x: auto;
+    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
+    font-size: 12px; color: ${C.textSoft}; font-weight: 500;
+    overflow-x: auto; flex-shrink: 0;
   }
   .uyap-bulk-statusbar .pill {
-    display: inline-flex; align-items: center; gap: 4px;
-    padding: 3px 8px; border-radius: 999px;
-    background: #fff; border: 1px solid ${C.border};
+    display: inline-flex; align-items: center; gap: 6px;
+    padding: 6px 12px; border-radius: 999px;
+    background: #fff; border: 1px solid rgba(226, 232, 240, 0.9);
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
     white-space: nowrap;
   }
   .uyap-bulk-statusbar .pill.active { background: ${C.accent}; color: #fff; border-color: ${C.accent}; }
@@ -169,31 +172,42 @@
     color: ${C.textSoft};
   }
 
-  .uyap-bulk-body { padding: 12px 14px; overflow: auto; flex: 1; background: ${C.panel}; }
-  .uyap-bulk-footer {
-    padding: 12px 14px; background: ${C.bg};
-    border-top: 1px solid ${C.border};
-    display: flex; gap: 6px; align-items: center;
+  .uyap-bulk-body {
+    padding: 20px 22px 24px; overflow: auto; flex: 1; min-height: 0;
+    background:
+      linear-gradient(180deg, rgba(255,255,255,0.65) 0%, transparent 120px),
+      linear-gradient(160deg, #e8eef6 0%, ${C.panel} 45%, #f1f5f9 100%);
+    display: flex; flex-direction: column; gap: 16px;
   }
+
+  .uyap-bulk-footer {
+    padding: 16px 22px 18px; background: linear-gradient(180deg, #fafbfc 0%, ${C.bg} 35%);
+    border-top: 1px solid ${C.border};
+    display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: flex-end;
+    flex-shrink: 0;
+    box-shadow: 0 -6px 24px -12px rgba(15, 23, 42, 0.08);
+  }
+  .uyap-bulk-footer .uyap-bulk-btn:first-of-type { margin-right: auto; }
 
   .uyap-bulk-row {
     display: flex; justify-content: space-between; align-items: center;
-    padding: 8px 0; gap: 10px;
+    padding: 12px 0; gap: 14px; flex-wrap: wrap;
+    min-height: 44px;
   }
-  .uyap-bulk-row + .uyap-bulk-row { border-top: 1px solid ${C.border}; }
-  .uyap-bulk-row label { color: ${C.textSoft}; flex: 1; min-width: 0; font-weight: 500; }
-  .uyap-bulk-row strong { color: ${C.text}; font-size: 14px; font-weight: 700; }
+  .uyap-bulk-row + .uyap-bulk-row { border-top: 1px solid rgba(226, 232, 240, 0.85); }
+  .uyap-bulk-row label { color: ${C.textSoft}; flex: 1; min-width: 140px; font-weight: 550; line-height: 1.35; }
+  .uyap-bulk-row strong { color: ${C.text}; font-size: 15px; font-weight: 700; }
 
   .uyap-bulk-row input[type=number] {
-    width: 82px; padding: 6px 9px;
+    width: 92px; padding: 8px 11px;
     border: 1px solid ${C.border}; border-radius: 7px;
     font: inherit; color: ${C.text}; background: ${C.bg};
     transition: border-color .15s ease, box-shadow .15s ease;
   }
   .uyap-bulk-row input[type=text],
   .uyap-bulk-row input[type=date] {
-    padding: 6px 10px; border: 1px solid ${C.border}; border-radius: 7px;
-    font: inherit; color: ${C.text}; background: ${C.bg}; width: 168px;
+    padding: 8px 12px; border: 1px solid ${C.border}; border-radius: 10px;
+    font: inherit; color: ${C.text}; background: ${C.bg}; width: min(100%, 200px);
     transition: border-color .15s ease, box-shadow .15s ease;
   }
   .uyap-bulk-row input[type=number]:focus,
@@ -217,33 +231,40 @@
   .uyap-bulk-row input[type=checkbox]:checked { background: ${C.accent}; }
   .uyap-bulk-row input[type=checkbox]:checked::after { transform: translateX(16px); }
   .uyap-bulk-row select {
-    padding: 6px 10px; border: 1px solid ${C.border}; border-radius: 7px;
-    font: inherit; color: ${C.text}; background: ${C.bg}; cursor: pointer; min-width: 170px;
+    padding: 8px 12px; border: 1px solid ${C.border}; border-radius: 10px;
+    font: inherit; color: ${C.text}; background: ${C.bg}; cursor: pointer; min-width: 200px;
     transition: border-color .15s ease, box-shadow .15s ease;
   }
 
   .uyap-bulk-section {
-    border: 1px solid ${C.border}; border-radius: 12px;
-    background: ${C.surface}; margin: 8px 0; overflow: hidden;
-    transition: box-shadow .2s ease, border-color .2s ease;
-  }
-  .uyap-bulk-section.open { box-shadow: 0 4px 14px -8px rgba(15, 23, 42, 0.12); }
-  .uyap-bulk-section-head {
-    padding: 11px 14px; cursor: pointer; user-select: none;
+    border: 1px solid rgba(226, 232, 240, 0.95); border-radius: 16px;
     background: ${C.surface};
-    display: flex; justify-content: space-between; align-items: center;
-    font-weight: 600; font-size: 13px; color: ${C.text};
-    transition: background .12s ease;
+    margin: 0; overflow: hidden;
+    box-shadow: ${C.shadow};
+    transition: box-shadow .22s ease, border-color .2s ease, transform .2s ease;
   }
-  .uyap-bulk-section-head:hover { background: #f8fafc; }
+  .uyap-bulk-section:hover { border-color: rgba(148, 163, 184, 0.35); }
+  .uyap-bulk-section.open {
+    box-shadow: 0 8px 32px -8px rgba(37, 99, 235, 0.12), 0 4px 16px -4px rgba(15, 23, 42, 0.08);
+    border-color: rgba(147, 197, 253, 0.55);
+  }
+  .uyap-bulk-section-head {
+    padding: 15px 18px; cursor: pointer; user-select: none;
+    background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    display: flex; justify-content: space-between; align-items: center;
+    font-weight: 650; font-size: 14px; color: ${C.text};
+    transition: background .15s ease;
+  }
+  .uyap-bulk-section-head:hover { background: linear-gradient(180deg, #fafbfc 0%, #f1f5f9 100%); }
   .uyap-bulk-section-head .head-left {
     display: inline-flex; align-items: center; gap: 9px;
   }
   .uyap-bulk-section-head .head-icon {
-    width: 26px; height: 26px; border-radius: 8px;
-    background: linear-gradient(135deg, ${C.accent} 0%, ${C.accent2} 100%); color: #fff;
+    width: 34px; height: 34px; border-radius: 11px;
+    background: linear-gradient(145deg, ${C.accent} 0%, ${C.primary} 100%); color: #fff;
     display: inline-flex; align-items: center; justify-content: center;
-    font-size: 13px; flex: none;
+    font-size: 15px; flex: none;
+    box-shadow: 0 3px 10px -2px rgba(37, 99, 235, 0.45);
   }
   .uyap-bulk-section-head .chev {
     color: ${C.muted}; transition: transform .25s ease; font-size: 10px;
@@ -252,8 +273,17 @@
   .uyap-bulk-section.open .uyap-bulk-section-head {
     border-bottom: 1px solid ${C.border};
   }
-  .uyap-bulk-section-body { padding: 8px 14px 12px; display: none; }
+  .uyap-bulk-section-body { padding: 6px 18px 20px; display: none; }
   .uyap-bulk-section.open .uyap-bulk-section-body { display: block; }
+
+  .uyap-bulk-opt { margin: 4px 0 10px; }
+  .uyap-bulk-opt:last-child { margin-bottom: 2px; }
+  .uyap-bulk-opt-sub {
+    padding: 14px 16px; margin-top: 10px; margin-bottom: 4px;
+    background: linear-gradient(180deg, rgba(248,250,252,1) 0%, rgba(241,245,249,0.92) 100%);
+    border-radius: 12px; border: 1px solid ${C.border};
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.8);
+  }
   .uyap-bulk-section-head .badge {
     background: ${C.accent}; color: #fff; font-size: 10.5px; font-weight: 700;
     padding: 2px 7px; border-radius: 999px; margin-left: 6px;
@@ -261,14 +291,39 @@
   }
 
   .uyap-bulk-hint {
-    font-size: 11.5px; color: ${C.muted}; padding: 5px 0 7px; line-height: 1.5;
+    font-size: 12.5px; color: ${C.muted}; padding: 8px 0 10px; line-height: 1.55;
+  }
+
+  .uyap-bulk-body-wrap {
+    display: flex; flex-direction: column; gap: 10px;
+  }
+  .uyap-bulk-monitor {
+    padding: 18px 18px 16px;
+    background: linear-gradient(180deg, #ffffff 0%, #fafbfc 100%);
+    border: 1px solid rgba(226, 232, 240, 0.95);
+    border-radius: 16px;
+    box-shadow: ${C.shadow};
+  }
+  .uyap-bulk-monitor-head {
+    display: flex; justify-content: space-between; align-items: baseline;
+    margin-bottom: 12px;
+  }
+  .uyap-bulk-monitor-title {
+    font-size: 13px; font-weight: 700; color: ${C.text}; letter-spacing: -0.02em;
+  }
+  .uyap-bulk-monitor-sub {
+    font-size: 11px; color: ${C.muted}; font-weight: 500;
+  }
+  .uyap-bulk-log-title {
+    font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em;
+    color: ${C.muted}; margin: 14px 2px 8px;
   }
   .uyap-bulk-hint b { color: ${C.warn}; font-weight: 600; }
 
   .uyap-bulk-btn {
-    padding: 9px 14px; border: 0; border-radius: 9px;
+    padding: 10px 16px; border: 0; border-radius: 11px;
     background: linear-gradient(180deg, ${C.accent} 0%, ${C.primary} 100%); color: #fff;
-    font: 600 13px -apple-system, "Segoe UI", Roboto, system-ui, sans-serif;
+    font: 600 13.5px -apple-system, "Segoe UI", Roboto, system-ui, sans-serif;
     cursor: pointer; transition: transform .12s ease, box-shadow .15s ease, filter .15s ease;
     white-space: nowrap;
     box-shadow: 0 2px 6px -2px rgba(11, 61, 145, 0.4),
@@ -299,14 +354,15 @@
     box-shadow: 0 2px 6px -2px rgba(16, 185, 129, 0.4);
   }
   .uyap-bulk-btn.flex { flex: 1; }
-  .uyap-bulk-btn.small { padding: 5px 10px; font-size: 11.5px; border-radius: 7px; }
+  .uyap-bulk-btn.small { padding: 7px 12px; font-size: 12px; border-radius: 9px; }
   .uyap-bulk-btn .kbd-hint {
     margin-left: 6px; padding: 1px 5px; border-radius: 4px;
     background: rgba(255,255,255,.22); font: 10px ui-monospace, monospace;
   }
 
   .uyap-bulk-progress {
-    height: 7px; background: #e8eaed; border-radius: 4px; overflow: hidden; margin-top: 10px;
+    height: 8px; background: #e2e8f0; border-radius: 999px; overflow: hidden;
+    margin-top: 4px; box-shadow: inset 0 1px 3px rgba(15, 23, 42, 0.06);
   }
   .uyap-bulk-progress > div {
     height: 100%; background: linear-gradient(90deg, ${C.accent}, ${C.ok});
@@ -317,10 +373,13 @@
   }
 
   .uyap-bulk-log {
-    margin-top: 10px; padding: 8px 10px;
-    background: ${C.logBg}; color: ${C.logText};
-    border-radius: 7px; max-height: 200px; overflow: auto;
-    font: 11.5px/1.5 ui-monospace, "Cascadia Mono", Consolas, "SF Mono", monospace;
+    margin-top: 0; padding: 14px 16px;
+    background: linear-gradient(165deg, #0d1524 0%, ${C.logBg} 45%);
+    color: ${C.logText};
+    border-radius: 14px; max-height: 220px; min-height: 72px; overflow: auto;
+    font: 12px/1.55 ui-monospace, "Cascadia Mono", Consolas, "SF Mono", monospace;
+    border: 1px solid rgba(148, 163, 184, 0.2);
+    box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 8px 24px -8px rgba(0,0,0,0.35);
   }
   .uyap-bulk-log .line { margin: 1px 0; word-break: break-word; }
   .uyap-bulk-log .ok   { color: #4ec97a; }
@@ -334,13 +393,14 @@
 
   /* Önizleme listesi */
   .uyap-bulk-list {
-    margin-top: 8px; max-height: 320px; overflow: auto;
-    border: 1px solid ${C.border}; border-radius: 6px; background: #fff;
+    margin-top: 10px; max-height: min(42vh, 400px); overflow: auto;
+    border: 1px solid ${C.border}; border-radius: 14px; background: #fff;
+    box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.04);
   }
   .uyap-bulk-list-item {
-    padding: 8px 10px; border-bottom: 1px solid #ecedee;
-    display: grid; grid-template-columns: 22px 1fr auto auto;
-    gap: 8px; align-items: center; font-size: 12px;
+    padding: 12px 14px; border-bottom: 1px solid #ecedee;
+    display: grid; grid-template-columns: 28px 1fr auto auto;
+    gap: 12px; align-items: center; font-size: 13px;
   }
   .uyap-bulk-list-item:last-child { border-bottom: 0; }
   .uyap-bulk-list-item:hover { background: #f8f9fa; }
@@ -356,16 +416,21 @@
   }
   .uyap-bulk-list-item .sub span { white-space: nowrap; }
   .uyap-bulk-list-item button.peek {
-    background: #f1f3f4; border: 1px solid ${C.border}; color: ${C.text};
-    cursor: pointer; padding: 3px 8px; border-radius: 4px; font-size: 11px;
+    background: ${C.bg}; border: 1px solid ${C.border}; color: ${C.textSoft};
+    cursor: pointer; padding: 7px 11px; border-radius: 10px; font-size: 12px; font-weight: 600;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.06);
+    transition: background .12s ease, border-color .12s ease, color .12s ease;
   }
-  .uyap-bulk-list-item button.peek:hover { background: #e0e3e5; }
+  .uyap-bulk-list-item button.peek:hover {
+    background: ${C.panel}; border-color: ${C.accent}; color: ${C.accent};
+  }
   .uyap-bulk-list-item.excluded { opacity: 0.4; background: #fbfbfb; }
 
   .uyap-bulk-list-toolbar {
-    padding: 6px 10px; background: #f1f3f4;
+    padding: 12px 14px; background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
     border-bottom: 1px solid ${C.border};
-    display: flex; gap: 6px; align-items: center; font-size: 11.5px;
+    display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 12px;
+    position: sticky; top: 0; z-index: 2;
   }
   .uyap-bulk-list-toolbar .count { color: ${C.muted}; margin-left: auto; }
 
@@ -375,11 +440,12 @@
 
   /* Queue list */
   .uyap-bulk-queue {
-    margin: 6px 0; max-height: 180px; overflow: auto;
-    border: 1px solid ${C.border}; border-radius: 6px; background: #fff;
+    margin: 8px 0 0; max-height: 200px; overflow: auto;
+    border: 1px solid ${C.border}; border-radius: 12px; background: #fff;
+    box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.04);
   }
   .uyap-bulk-queue-item {
-    padding: 6px 10px; border-bottom: 1px solid #ecedee;
+    padding: 10px 14px; border-bottom: 1px solid #ecedee;
     display: flex; gap: 8px; align-items: center; font-size: 12px;
   }
   .uyap-bulk-queue-item:last-child { border-bottom: 0; }
@@ -390,14 +456,15 @@
 
   /* Type filter chips */
   .uyap-bulk-chips {
-    display: flex; flex-wrap: wrap; gap: 4px; padding-top: 4px;
-    max-height: 110px; overflow: auto;
+    display: flex; flex-wrap: wrap; gap: 8px; padding-top: 6px;
+    max-height: 132px; overflow: auto;
   }
   .uyap-bulk-chip {
     display: inline-flex; align-items: center; gap: 4px;
-    padding: 3px 8px; border-radius: 999px;
+    padding: 6px 12px; border-radius: 999px;
     background: #fff; border: 1px solid ${C.border};
-    font-size: 11px; cursor: pointer; user-select: none;
+    font-size: 12px; cursor: pointer; user-select: none;
+    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
   }
   .uyap-bulk-chip:hover { background: #f1f3f4; }
   .uyap-bulk-chip.active { background: ${C.accent}; color: #fff; border-color: ${C.accent}; }
@@ -415,8 +482,8 @@
   }
   @keyframes uyap-bulk-fadein { from { opacity: 0; } to { opacity: 1; } }
   .uyap-bulk-palette {
-    width: 580px; max-width: calc(100vw - 40px);
-    background: ${C.bg}; border-radius: 14px;
+    width: 620px; max-width: calc(100vw - 40px);
+    background: ${C.bg}; border-radius: 18px;
     box-shadow: 0 24px 64px -8px rgba(0,0,0,0.45);
     overflow: hidden; display: flex; flex-direction: column;
     animation: uyap-bulk-fadeup .2s ease;
@@ -967,9 +1034,16 @@
     UI.progressLabel = el('div', { class: 'uyap-bulk-progress-label' }, '');
     UI.logBox = el('div', { class: 'uyap-bulk-log' });
 
-    body.appendChild(el('div', { class: 'uyap-bulk-progress' }, UI.progressBar));
-    body.appendChild(UI.progressLabel);
-    body.appendChild(UI.logBox);
+    body.appendChild(el('div', { class: 'uyap-bulk-monitor' },
+      el('div', { class: 'uyap-bulk-monitor-head' },
+        el('span', { class: 'uyap-bulk-monitor-title' }, 'İlerleme'),
+        el('span', { class: 'uyap-bulk-monitor-sub' }, 'Günlük aşağıda')
+      ),
+      el('div', { class: 'uyap-bulk-progress' }, UI.progressBar),
+      UI.progressLabel,
+      el('div', { class: 'uyap-bulk-log-title' }, 'Günlük'),
+      UI.logBox,
+    ));
 
     /* --- Footer buttons --- */
     UI.scanBtn = el('button', { class: 'uyap-bulk-btn ghost flex', onclick: onScan }, 'Tara');
@@ -1062,7 +1136,7 @@
     const row = el('div', { class: 'uyap-bulk-row' }, el('label', {}, labelText), toggle);
     wrap.appendChild(row);
     if (sub.length) {
-      const sec = el('div', { style: 'padding: 4px 0 6px 0;' }, ...sub);
+      const sec = el('div', { class: 'uyap-bulk-opt-sub' }, ...sub);
       sec.style.display = toggle.checked ? 'block' : 'none';
       toggle.addEventListener('change', () => {
         sec.style.display = toggle.checked ? 'block' : 'none';
@@ -2049,7 +2123,7 @@
     if (!UI.fab || !UI.panel) return;
     const fabRect = UI.fab.getBoundingClientRect();
     const panelHeight = Math.min(window.innerHeight * 0.84, 700);
-    const panelWidth = 520;
+    const panelWidth = 600;
     let top = fabRect.top - panelHeight - 12;
     let left = fabRect.left;
     if (top < 12) top = fabRect.bottom + 12;
