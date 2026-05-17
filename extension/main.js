@@ -128,19 +128,14 @@
   .uyap-bulk-close:hover { background: #fee2e2; border-color: #fecaca; color: ${C.err}; }
 
   .uyap-bulk-statusbar {
-    padding: 8px 14px 8px;
+    padding: 8px 14px;
     background: ${C.panel};
     border-bottom: 1px solid ${C.border};
-    display: flex; flex-direction: column; gap: 6px;
     font-size: 11.5px; color: ${C.textSoft}; flex-shrink: 0;
   }
   .uyap-bulk-statusbar-main {
     display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
     row-gap: 6px;
-  }
-  .uyap-bulk-statusbar-hint {
-    display: flex; justify-content: flex-end; align-items: center;
-    padding-top: 1px;
   }
   .uyap-bulk-statusbar .pill {
     display: inline-flex; align-items: center; gap: 5px;
@@ -152,10 +147,6 @@
   .uyap-bulk-statusbar .pill.active { background: ${C.accent}; color: #fff; border-color: ${C.accent}; }
   .uyap-bulk-statusbar .pill.warn   { background: #fffbeb; color: #b45309; border-color: #fde68a; }
   .uyap-bulk-statusbar .pill .dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: .9; }
-  .uyap-bulk-statusbar .status-hint {
-    font-size: 10.5px; color: ${C.muted};
-    display: inline-flex; align-items: center; gap: 4px;
-  }
   .uyap-bulk-statusbar kbd {
     background: ${C.bg}; border: 1px solid ${C.border}; border-radius: 4px;
     padding: 1px 5px; font: 10px ui-monospace, monospace; color: ${C.textSoft};
@@ -165,7 +156,11 @@
   .uyap-bulk-body {
     padding: 12px 14px 14px; overflow: auto; flex: 1; min-height: 0;
     background: ${C.panel};
-    display: flex; flex-direction: column; gap: 10px;
+    display: flex; flex-direction: column; gap: 0;
+    align-items: stretch;
+  }
+  .uyap-bulk-body > * {
+    flex-shrink: 0;
   }
 
   .uyap-bulk-footer {
@@ -226,57 +221,60 @@
     transition: border-color .15s ease, box-shadow .15s ease;
   }
 
-  .uyap-bulk-section {
-    border: 1px solid ${C.border}; border-radius: 12px;
+  .uyap-bulk-block {
+    display: block; width: 100%;
+    margin: 0 0 12px; padding: 0;
+    box-sizing: border-box;
     background: ${C.surface};
-    margin: 0; overflow: hidden;
-    box-shadow: none;
+    border: 1px solid ${C.border};
+    border-radius: 12px;
+    position: relative;
+    z-index: 0;
+    overflow: visible;
+    contain: layout style;
   }
-  .uyap-bulk-section.open { border-color: #c7ced9; }
-  .uyap-bulk-section-head {
-    padding: 10px 12px; cursor: pointer; user-select: none;
-    background: ${C.surface};
-    display: flex; justify-content: space-between; align-items: center;
+  .uyap-bulk-block:last-child { margin-bottom: 0; }
+  .uyap-bulk-block-title {
+    padding: 10px 14px;
+    background: #f1f5f9;
+    border-bottom: 1px solid ${C.border};
+    border-radius: 12px 12px 0 0;
+    display: flex; align-items: center; justify-content: space-between;
+    gap: 8px;
     font-weight: 600; font-size: 12.5px; color: ${C.text};
     letter-spacing: -0.01em;
-    position: relative;
   }
-  .uyap-bulk-section-head:hover { background: #f8fafc; }
-  .uyap-bulk-section-head .head-left {
-    display: inline-flex; align-items: center; gap: 8px; min-width: 0; flex: 1;
+  .uyap-bulk-block-title .head-left {
+    display: inline-flex; align-items: center; gap: 8px;
+    min-width: 0; flex: 1;
   }
-  .uyap-bulk-section-head .head-title {
+  .uyap-bulk-block-title .head-title {
     overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     min-width: 0;
   }
-  .uyap-bulk-section-head .head-icon {
+  .uyap-bulk-block-title .head-icon {
     width: 30px; height: 30px; border-radius: 9px;
-    background: ${C.panel}; color: ${C.accent};
+    background: ${C.bg}; color: ${C.accent};
     display: inline-flex; align-items: center; justify-content: center;
-    font-size: 13px; flex: none; border: none;
+    font-size: 13px; flex: none;
   }
-  .uyap-bulk-section-head .chev {
-    color: ${C.muted}; transition: transform .2s ease; font-size: 9px; flex: none;
-    opacity: .75; width: 1.25em; text-align: center;
+  .uyap-bulk-block-body {
+    padding: 10px 14px 14px;
+    display: block;
+    overflow: visible;
+    border-radius: 0 0 12px 12px;
   }
-  .uyap-bulk-section.open .uyap-bulk-section-head .chev { transform: rotate(90deg); }
-  .uyap-bulk-section.open .uyap-bulk-section-head {
-    background: #fafbfc;
-    border-bottom: 1px solid ${C.border};
+  .uyap-bulk-block-title .badge {
+    background: ${C.accent}; color: #fff; font-size: 10.5px; font-weight: 700;
+    padding: 2px 7px; border-radius: 999px; margin-left: 6px;
+    min-width: 18px; text-align: center; flex-shrink: 0;
   }
-  .uyap-bulk-section-body { padding: 2px 12px 12px; display: none; }
-  .uyap-bulk-section.open .uyap-bulk-section-body { display: block; }
 
   .uyap-bulk-opt { margin: 2px 0 8px; }
   .uyap-bulk-opt:last-child { margin-bottom: 0; }
   .uyap-bulk-opt-sub {
     padding: 10px 12px; margin-top: 8px;
     background: #f8fafc; border-radius: 10px; border: 1px solid ${C.border};
-  }
-  .uyap-bulk-section-head .badge {
-    background: ${C.accent}; color: #fff; font-size: 10.5px; font-weight: 700;
-    padding: 2px 7px; border-radius: 999px; margin-left: 6px;
-    min-width: 18px; text-align: center;
   }
 
   .uyap-bulk-hint {
@@ -701,6 +699,19 @@
     return `${dosya}::${birim}::${tarih}::${aciklama}`;
   }
 
+  /**
+   * Aynı evrak UYAP ağacında birden fazla .evrak-list--item olarak görünebiliyor.
+   * Tarama listesini tekilleştirmek için anahtar (tercihen Birim Evrak No + tarih).
+   */
+  function getEvrakScanDedupKey(meta) {
+    const esas = getOpenDosyaInfo().esas;
+    const birim = sanitize(String(meta['Birim Evrak No'] || '').trim());
+    const tarihRaw = meta['Onaylandığı Tarih'] || meta['Sisteme Gönderildiği Tarih'] || '';
+    const tarih = String(tarihRaw).replace(/\s/g, '');
+    if (birim) return `${esas}::${birim}::${tarih}`;
+    return makeEvrakKey(meta);
+  }
+
   function getAllNotes() {
     try { return JSON.parse(localStorage.getItem(STORAGE_NOTES) || '{}'); }
     catch { return {}; }
@@ -735,6 +746,51 @@
     return '99_Diger';
   }
 
+  /** Klasör adı — Windows uyumlu, kısa */
+  function sanitizePathSegment(name) {
+    const s = sanitize(String(name || '').replace(/\s+/g, ' ').trim()).slice(0, 120);
+    return s || 'Klasor';
+  }
+
+  /** li.dx-treeview-node satırındaki görünen klasör/evrak başlığı (iç içe metin değil) */
+  function extractDxTreeItemLabel(liNode) {
+    if (!liNode || !liNode.classList.contains('dx-treeview-node')) return '';
+    const kids = liNode.children;
+    for (let i = 0; i < kids.length; i++) {
+      const c = kids[i];
+      if (c.tagName === 'UL') continue;
+      const inner = c.querySelector?.('.dx-item-content') || c;
+      const t = (inner.textContent || '').replace(/\s+/g, ' ').trim();
+      if (t) return t.slice(0, 200);
+    }
+    return '';
+  }
+
+  /**
+   * UYAP sol ağacında bu evrakın üzerindeki klasör zinciri [üst, ..., en iç].
+   * Örn. Tebligatlar > Genel Müzekkere → ['Tebligatlar', 'Genel_Muzekkere']
+   */
+  function getEvrakTreeFolderSegments(leafTreeNode) {
+    const segments = [];
+    if (!leafTreeNode) return segments;
+    let ul = leafTreeNode.parentElement;
+    while (ul && !ul.classList.contains('dx-treeview-node-container')) {
+      ul = ul.parentElement;
+    }
+    while (ul && ul.classList.contains('dx-treeview-node-container')) {
+      const parentLi = ul.parentElement;
+      if (!parentLi || !parentLi.classList.contains('dx-treeview-node')) break;
+      const raw = extractDxTreeItemLabel(parentLi);
+      if (raw) segments.unshift(sanitizePathSegment(raw));
+      let next = parentLi.parentElement;
+      while (next && !next.classList.contains('dx-treeview-node-container')) {
+        next = next.parentElement;
+      }
+      ul = next;
+    }
+    return segments;
+  }
+
   function renderTemplate(tmpl, meta, index, ext) {
     const tarih = (meta['Onaylandığı Tarih'] || meta['Sisteme Gönderildiği Tarih'] || '')
       .replace(/\//g, '-');
@@ -754,7 +810,7 @@
 
   /* ============================== STATE ============================== */
   const state = {
-    scanned: [],      // {row, treeNode, treeItem, meta, aria, date, type}
+    scanned: [],      // {row, treeNode, treeItem, meta, aria, date, type, folderSegments, index}
     filtered: [],     // after filters
     selected: new Set(), // indices in filtered
     queue: [],        // multi-case mode: [{row, ariaInfo}]
@@ -814,7 +870,7 @@
       el('div', { style: 'min-width: 0; flex: 1;' },
         el('h3', {}, el('span', { class: 'brand' }, 'Uyap'), el('span', { class: 'brand-plus' }, '+'),
           el('span', { class: 'brand-sub' }, ' Toplu Evrak İndirici')),
-        el('span', { class: 'sub' }, 'v2.3.3 · Ctrl+K komut paleti')),
+        el('span', { class: 'sub' }, 'v2.3.6 · Ctrl+K komut paleti')),
       el('div', { class: 'uyap-bulk-header-actions' },
         UI.pinBtn,
         el('button', { class: 'uyap-bulk-close', title: 'Kapat (Esc)' }, '×')
@@ -843,7 +899,7 @@
     updateHint();
 
     body.appendChild(
-      makeSection('genel', 'Genel Ayarlar', '⚙', true,
+      makeSection('genel', 'Genel Ayarlar', '⚙',
         el('div', { class: 'uyap-bulk-row' }, el('label', {}, 'Bulunan evrak:'), UI.countEl),
         el('div', { class: 'uyap-bulk-row' }, el('label', {}, 'İndirme formatı:'), UI.formatSelect),
         formatHint,
@@ -870,7 +926,7 @@
 
     UI.filterBadge = el('span', { class: 'badge', style: 'display:none' }, '0');
 
-    const filterSection = makeSection('filtre', 'Filtreler (opsiyonel)', '⚲', false,
+    const filterSection = makeSection('filtre', 'Filtreler (opsiyonel)', '⚲',
       el('div', { class: 'uyap-bulk-hint' },
         'Bu seçenekleri açtığınızda sadece kriterlere uyan evraklar indirilir. ',
         'Hiçbirini açmazsanız tüm evraklar indirilir.'),
@@ -890,7 +946,7 @@
         el('button', { class: 'uyap-bulk-btn ghost small', onclick: resetFilters }, 'Sıfırla')),
     );
 
-    const filterHead = filterSection.querySelector('.uyap-bulk-section-head > span');
+    const filterHead = filterSection.querySelector('.uyap-bulk-block-title .head-left');
     if (filterHead) filterHead.appendChild(UI.filterBadge);
 
     body.appendChild(filterSection);
@@ -916,10 +972,12 @@
     UI.exportCsvBtn  = el('button', { class: 'uyap-bulk-btn ghost small', onclick: exportCSV }, 'CSV / Excel Listesi İndir');
 
     body.appendChild(
-      makeSection('cikti', 'Çıktı Seçenekleri', '↓', true,
+      makeSection('cikti', 'Çıktı Seçenekleri', '↓',
         makeOpt('Otomatik alt klasör yapısı (Dosya_2025-849/...)', UI.useAutoFolder),
-        makeOpt('Türe göre kategorize et (Duruşma_Zaptları/, Kararlar/ vb.)', UI.useCategorize,
-          el('div', { class: 'uyap-bulk-hint' }, 'Evrak türüne göre otomatik alt klasörlere ayrılır. "Otomatik alt klasör"le birlikte çalışır.')),
+        makeOpt('Türe göre kategorize et (UYAP ağacındaki alt klasörler)', UI.useCategorize,
+          el('div', { class: 'uyap-bulk-hint' },
+            'Açıksa indirme yolu UYAP\'taki klasör yapısını taklit eder (örn. Tebligatlar / Genel Müzekkere). ',
+            'Ağaçtan okunamazsa eski tür-tablosu (01_Durusma_Zaptları vb.) kullanılır. «Otomatik alt klasör» ile birlikte önce dosya klasörü, sonra bu alt yol oluşur.')),
         makeOpt('Tek ZIP arşivi olarak indir', UI.useZip,
           el('div', { class: 'uyap-bulk-hint' }, 'Tüm evraklar tek bir .zip dosyasında paketlenir. Büyük arşivler için RAM kullanımı artar.')),
         makeOpt('Tek birleşik PDF olarak indir', UI.useMergePdf,
@@ -952,7 +1010,7 @@
     UI.clearQueueBtn = el('button', { class: 'uyap-bulk-btn ghost small', onclick: clearQueue }, 'Kuyruğu Temizle');
 
     body.appendChild(
-      makeSection('gelismis', 'Gelişmiş', '⚡', false,
+      makeSection('gelismis', 'Gelişmiş', '⚡',
         makeOpt('Çoklu dosya kuyruğu (birden fazla dosyayı sırayla işle)', UI.useMultiCase,
           el('div', { class: 'uyap-bulk-hint' },
             'Kuyruğa eklediğin her dosya teker teker otomatik açılır, evrakları indirilir ve sonraki dosyaya geçilir. ',
@@ -977,7 +1035,7 @@
     UI.previewToolbar.appendChild(UI.previewCount);
 
     body.appendChild(
-      makeSection('onizleme', 'Önizleme — Evrak Listesi', '📑', false,
+      makeSection('onizleme', 'Önizleme — Evrak Listesi', '📑',
         el('div', { class: 'uyap-bulk-hint' }, 'Tarama sonrası tüm evraklar burada listelenir. Üzerine tıklayarak UYAP\'ta önizleyebilirsin. Filtreler uygulandığında sönükleştirilir.'),
         UI.previewToolbar,
         UI.previewList,
@@ -1064,17 +1122,15 @@
     refreshOnlyNewInfo();
   }
 
-  function makeSection(id, title, icon, openByDefault, ...children) {
-    const head = el('div', { class: 'uyap-bulk-section-head' },
+  function makeSection(id, title, icon, ...children) {
+    const titleRow = el('div', { class: 'uyap-bulk-block-title' },
       el('span', { class: 'head-left' },
         el('span', { class: 'head-icon' }, icon || '•'),
         el('span', { class: 'head-title' }, title)
-      ),
-      el('span', {}, el('span', { class: 'chev' }, '▶'))
+      )
     );
-    const body = el('div', { class: 'uyap-bulk-section-body' }, ...children);
-    const section = el('div', { class: 'uyap-bulk-section' + (openByDefault ? ' open' : '') }, head, body);
-    head.addEventListener('click', () => section.classList.toggle('open'));
+    const blockBody = el('div', { class: 'uyap-bulk-block-body' }, ...children);
+    const section = el('div', { class: 'uyap-bulk-block' }, titleRow, blockBody);
     section.dataset.section = id;
     return section;
   }
@@ -1158,19 +1214,39 @@
     const rows = Array.from(document.querySelectorAll('.evrak-list--item'))
       .filter((r) => r.querySelector('button[aria-label="download"]'));
 
-    state.scanned = rows.map((row, i) => {
+    const seenKeys = new Set();
+    let skippedDup = 0;
+    state.scanned = [];
+    for (let i = 0; i < rows.length; i++) {
+      const row = rows[i];
       const treeNode = row.closest('li.dx-treeview-node');
       const treeItem = treeNode?.querySelector('.dx-item.dx-treeview-item');
       const tdiv = row.querySelector('div[title]');
       const meta = parseTitleAttr(tdiv?.getAttribute('title'));
-      const aria = treeNode?.getAttribute('aria-label') || `#${i + 1}`;
+      const dedupKey = getEvrakScanDedupKey(meta);
+      if (seenKeys.has(dedupKey)) {
+        skippedDup++;
+        continue;
+      }
+      seenKeys.add(dedupKey);
+      const aria = treeNode?.getAttribute('aria-label') || `#${state.scanned.length + 1}`;
       const dateStr = meta['Onaylandığı Tarih'] || meta['Sisteme Gönderildiği Tarih'];
       const date = parseDateDDMMYYYY(dateStr);
       const type = (meta['Tür'] || '').trim();
-      return { row, treeNode, treeItem, meta, aria, date, type, index: i };
-    });
+      const folderSegments = getEvrakTreeFolderSegments(treeNode);
+      state.scanned.push({
+        row, treeNode, treeItem, meta, aria, date, type, folderSegments,
+        index: state.scanned.length,
+      });
+    }
 
-    log(`Toplam ${state.scanned.length} evrak bulundu.`, state.scanned.length ? 'ok' : 'warn');
+    if (skippedDup > 0) {
+      log(`${skippedDup} tekrarlayan satır yok sayıldı (aynı evrak ağaçta birden fazla yerde listelenmiş).`, 'info');
+    }
+    log(
+      `Toplam ${state.scanned.length} evrak${skippedDup ? ` (${rows.length} satırdan)` : ''}.`,
+      state.scanned.length ? 'ok' : 'warn',
+    );
 
     refreshTypeChips();
     refreshOnlyNewInfo();
@@ -1725,7 +1801,7 @@
     setTimeout(() => { URL.revokeObjectURL(blobUrl); a.remove(); }, 1500);
   }
 
-  function getFilenameWithFolder(meta, index, ext) {
+  function getFilenameWithFolder(meta, index, ext, folderSegments) {
     const useTmpl = UI.useTemplate?.checked && (UI.templateInput?.value || '').trim();
     const base = useTmpl
       ? sanitize(renderTemplate(UI.templateInput.value.trim(), meta, index, ext))
@@ -1733,7 +1809,11 @@
 
     const parts = [];
     if (UI.useAutoFolder?.checked) parts.push(getOpenDosyaFolderName());
-    if (UI.useCategorize?.checked) parts.push(getCategoryFolder(meta));
+    if (UI.useCategorize?.checked) {
+      const treeParts = Array.isArray(folderSegments) ? folderSegments.filter(Boolean) : [];
+      if (treeParts.length) parts.push(...treeParts);
+      else parts.push(getCategoryFolder(meta));
+    }
     parts.push(base);
     return parts.join('/');
   }
@@ -1844,7 +1924,7 @@
         await sleep(80);
       }
       if (captured.length > before) {
-        tasks.push({ url: captured[captured.length - 1], meta: s.meta, index: i + 1 });
+        tasks.push({ url: captured[captured.length - 1], meta: s.meta, index: i + 1, folderSegments: s.folderSegments });
       } else {
         log(`#${i + 1} URL yakalanamadı.`, 'warn');
       }
@@ -1872,7 +1952,7 @@
           const mExt = origName.match(/\.([a-z0-9]{1,5})$/i);
           if (mExt) ext = '.' + mExt[1].toLowerCase();
         }
-        const filename = getFilenameWithFolder(t.meta, t.index, ext);
+        const filename = getFilenameWithFolder(t.meta, t.index, ext, t.folderSegments);
         const blob = await r.blob();
 
         if (zipMode) {
@@ -1988,7 +2068,7 @@
 
       if (capturedPdfs.length > before) {
         const pdf = capturedPdfs[capturedPdfs.length - 1];
-        const filename = getFilenameWithFolder(s.meta, i + 1, '.pdf');
+        const filename = getFilenameWithFolder(s.meta, i + 1, '.pdf', s.folderSegments);
         try {
           if (batchMode) {
             collected.push({ filename, blob: pdf.blob, meta: s.meta, index: i + 1 });
@@ -2188,11 +2268,6 @@
     }
 
     UI.statusBar.appendChild(mainRow);
-
-    const tipBox = el('div', { class: 'uyap-bulk-statusbar-hint' },
-      el('span', { class: 'status-hint' },
-        el('kbd', {}, 'Ctrl'), el('kbd', {}, 'K'), el('span', {}, 'Komut paleti')));
-    UI.statusBar.appendChild(tipBox);
   }
 
   /* ============================== COMMAND PALETTE ============================== */
