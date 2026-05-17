@@ -877,6 +877,7 @@
     UI.useAutoFolder  = makeToggle(); UI.useAutoFolder.checked = true;
     UI.useCategorize  = makeToggle();
     UI.useZip         = makeToggle();
+    UI.useMergePdf    = makeToggle();
     UI.useTemplate    = makeToggle();
     UI.templateInput  = el('input', { type: 'text',
       placeholder: DEFAULT_TEMPLATE,
@@ -899,6 +900,11 @@
           el('div', { class: 'uyap-bulk-hint' }, 'Evrak türüne göre otomatik alt klasörlere ayrılır. "Otomatik alt klasör"le birlikte çalışır.')),
         makeOpt('Tek ZIP arşivi olarak indir', UI.useZip,
           el('div', { class: 'uyap-bulk-hint' }, 'Tüm evraklar tek bir .zip dosyasında paketlenir. Büyük arşivler için RAM kullanımı artar.')),
+        makeOpt('Tek birleşik PDF olarak indir', UI.useMergePdf,
+          el('div', { class: 'uyap-bulk-hint' },
+            '🛈 Sadece <b>PDF modu</b>nda çalışır. ',
+            'Seçili/filtrelenmiş tüm evraklar tek bir PDF dosyasında birleştirilir, sayfaları orijinal sırasıyla eklenir. ',
+            'ZIP modu da açıksa hem ZIP hem birleşik PDF üretilir.')),
         makeOpt('Özel dosya adı şablonu kullan', UI.useTemplate,
           el('div', { class: 'uyap-bulk-hint' },
             'Placeholderlar: ',
@@ -1582,6 +1588,10 @@
     const delay = Math.max(0, parseInt(UI.delayInput.value, 10) || 800);
     const format = UI.formatSelect.value;
 
+    if (UI.useMergePdf.checked && format !== 'pdf') {
+      log('UYARI: "Tek birleşik PDF" sadece PDF modunda çalışır. Yok sayılıyor.', 'warn');
+    }
+
     log(`İndirme başlıyor: ${rows.length} evrak, format=${format.toUpperCase()}, ${delay}ms bekleme.`, 'info');
 
     let result;
@@ -1717,6 +1727,54 @@
       setProgress(95 + m.percent * 0.05, `ZIP: ${m.percent.toFixed(0)}%`);
     });
     saveBlobAs(content, zipName);
+    return true;
+  }
+
+  async function mergePdfs(items, mergedName) {
+    if (typeof PDFLib === 'undefined' || !PDFLib.PDFDocument) {
+      log('pdf-lib kütüphanesi yüklenemedi.', 'err');
+      return false;
+    }
+    const { PDFDocument } = PDFLib;
+    log(`Tek PDF\'de birleştiriliyor: ${items.length} evrak…`, 'info');
+
+    const mergedPdf = await PDFDocument.create();
+    let okCount = 0, failCount = 0;
+
+    for (let i = 0; i < items.length; i++) {
+      const item = items[i];
+      try {
+        const bytes = await item.blob.arrayBuffer();
+        const src = await PDFDocument.load(bytes, { ignoreEncryption: true, throwOnInvalidObject: false });
+        const pageIndices = src.getPageIndices();
+        const copied = await mergedPdf.copyPages(src, pageIndices);
+        copied.forEach((p) => mergedPdf.addPage(p));
+        okCount++;
+      } catch (e) {
+        failCount++;
+        log(`Birleştirme atlandı (${item.filename}): ${e?.message || e}`, 'warn');
+      }
+      setProgress(90 + (i + 1) / items.length * 9,
+        `PDF birleştiriliyor [${i + 1}/${items.length}]`);
+    }
+
+    if (okCount === 0) {
+      log('Hiçbir PDF birleştirilemedi.', 'err');
+      return false;
+    }
+
+    setProgress(99, 'PDF yazılıyor…');
+    try {
+      mergedPdf.setTitle('UYAP Birlesik PDF — ' + getOpenDosyaInfo().raw);
+      mergedPdf.setCreator('Uyap+ Toplu Evrak İndirici');
+      mergedPdf.setProducer('pdf-lib + Uyap+');
+      mergedPdf.setCreationDate(new Date());
+    } catch {}
+
+    const mergedBytes = await mergedPdf.save({ useObjectStreams: true });
+    const blob = new Blob([mergedBytes], { type: 'application/pdf' });
+    saveBlobAs(blob, mergedName);
+    log(`Birleşik PDF oluşturuldu: ${okCount} evrak, ${failCount} atlandı, ${(blob.size / 1024 / 1024).toFixed(2)} MB.`, 'ok');
     return true;
   }
 
@@ -1879,8 +1937,14 @@
     };
 
     const zipMode = UI.useZip.checked;
-    const zipItems = [];
+    const mergeMode = UI.useMergePdf.checked;
+    const batchMode = zipMode || mergeMode; // diskle yazma yerine batch'e topla
+    const collected = []; // birleştirme/zip için: { filename, blob, meta, index }
     let ok = 0, bad = 0;
+
+    if (mergeMode && typeof PDFLib === 'undefined') {
+      log('pdf-lib yüklenmemiş — birleştirme atlanacak. Eklentiyi yeniden yükle.', 'warn');
+    }
 
     for (let i = 0; i < rows.length; i++) {
       const s = rows[i];
@@ -1900,8 +1964,8 @@
         const pdf = capturedPdfs[capturedPdfs.length - 1];
         const filename = getFilenameWithFolder(s.meta, i + 1, '.pdf');
         try {
-          if (zipMode) {
-            zipItems.push({ filename, blob: pdf.blob });
+          if (batchMode) {
+            collected.push({ filename, blob: pdf.blob, meta: s.meta, index: i + 1 });
             log(`+ ${filename} (${(pdf.blob.size / 1024).toFixed(1)} KB)`, 'ok');
           } else {
             saveBlobAs(pdf.blob, filename);
@@ -1917,16 +1981,22 @@
         log(`PDF yakalanamadı: ${s.aria}`, 'warn');
       }
 
-      setProgress(((i + 1) / rows.length) * (zipMode ? 90 : 100),
+      setProgress(((i + 1) / rows.length) * (batchMode ? 88 : 100),
         `PDF yakalanıyor [${i + 1}/${rows.length}]`);
       await sleep(delay);
     }
 
     captureMode = false;
 
-    if (zipMode && zipItems.length > 0) {
+    if (mergeMode && collected.length > 0 && typeof PDFLib !== 'undefined') {
+      const dateTag = new Date().toISOString().slice(0, 10);
+      const mergedName = `${getOpenDosyaFolderName()}_Birlesik_${dateTag}.pdf`;
+      await mergePdfs(collected, mergedName);
+    }
+
+    if (zipMode && collected.length > 0) {
       const zipName = `${getOpenDosyaFolderName()}_PDF_Arsivi.zip`;
-      await packageAsZip(zipItems, zipName);
+      await packageAsZip(collected, zipName);
     }
 
     if (ok === 0 && bad > 0) {
@@ -2067,6 +2137,7 @@
       { id: 'csv', icon: '📊', title: 'CSV / Excel Listesi İndir', sub: 'Evrak metadata\'sını CSV olarak çıkar', action: exportCSV },
       { id: 'savelog', icon: '📝', title: 'Log Kaydet', sub: 'Mevcut log\'u .txt olarak indir', action: saveLog },
       { id: 'toggle-zip', icon: '📦', title: (UI.useZip?.checked ? '☑ ' : '☐ ') + 'ZIP Modu', sub: 'Tüm evrakları tek arşivde topla', action: () => { UI.useZip.checked = !UI.useZip.checked; } },
+      { id: 'toggle-merge', icon: '📑', title: (UI.useMergePdf?.checked ? '☑ ' : '☐ ') + 'Birleşik PDF', sub: 'Tüm PDF\'leri tek dosyada birleştir (PDF modu gerekir)', action: () => { UI.useMergePdf.checked = !UI.useMergePdf.checked; } },
       { id: 'toggle-pdf', icon: '📄', title: (UI.formatSelect?.value === 'pdf' ? '☑ ' : '☐ ') + 'PDF Modu', sub: 'UDF yerine PDF formatında indir', action: () => { UI.formatSelect.value = UI.formatSelect.value === 'pdf' ? 'udf' : 'pdf'; UI.formatSelect.dispatchEvent(new Event('change')); } },
       { id: 'toggle-cat', icon: '🗂', title: (UI.useCategorize?.checked ? '☑ ' : '☐ ') + 'Türe Göre Kategorize', sub: 'Otomatik alt klasörlere ayır', action: () => { UI.useCategorize.checked = !UI.useCategorize.checked; } },
       { id: 'toggle-select', icon: '☑', title: (UI.useSelection?.checked ? '☑ ' : '☐ ') + 'Seçim Modu', sub: 'Tek tek seçerek indir', action: () => { UI.useSelection.checked = !UI.useSelection.checked; UI.useSelection.dispatchEvent(new Event('change')); } },
