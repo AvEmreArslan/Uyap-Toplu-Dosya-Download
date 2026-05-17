@@ -17,14 +17,23 @@
   };
 
   const C = {
-    primary: '#0b3d91', primaryHover: '#0a3380', accent: '#1e88e5',
-    ok: '#1e8e3e', warn: '#e37400', err: '#c5221f',
-    bg: '#ffffff', panel: '#f8f9fb', border: '#dadce0',
-    text: '#202124', muted: '#5f6368',
-    logBg: '#0d1117', logText: '#d0d7de',
+    primary: '#0b3d91', primaryHover: '#082e6e', accent: '#2563eb',
+    accentSoft: '#3b82f6', accent2: '#60a5fa',
+    ok: '#10b981', warn: '#f59e0b', err: '#ef4444',
+    bg: '#ffffff', panel: '#f8fafc', surface: '#ffffff',
+    border: '#e2e8f0', borderStrong: '#cbd5e1',
+    text: '#0f172a', textSoft: '#334155', muted: '#64748b',
+    logBg: '#0b1220', logText: '#cbd5e1',
+    yellow: '#ffd54f',
   };
 
-  const STORAGE_KEY = 'uyapBulk:lastDownload';
+  const STORAGE_KEY     = 'uyapBulk:lastDownload';
+  const STORAGE_PIN     = 'uyapBulk:pinned';
+  const STORAGE_FAB_POS = 'uyapBulk:fabPos';
+  const STORAGE_NOTES   = 'uyapBulk:notes';
+  const STORAGE_TEMPL   = 'uyapBulk:filenameTemplate';
+  const STORAGE_OPTS    = 'uyapBulk:opts';
+  const DEFAULT_TEMPLATE = '{tarih}_{tur}_{aciklama}_{birim}';
 
   /* ============================== STYLES ============================== */
   const CSS = `
@@ -80,21 +89,46 @@
   .uyap-bulk-fab.attention { animation: uyap-bulk-pulse 1.8s ease-in-out infinite; }
 
   .uyap-bulk-panel {
-    position: fixed; left: 18px; bottom: 76px; z-index: 2147483647;
-    width: 480px; max-width: calc(100vw - 36px);
-    max-height: 82vh;
+    position: fixed; left: 20px; bottom: 80px; z-index: 2147483647;
+    width: 520px; max-width: calc(100vw - 40px);
+    max-height: 84vh;
     background: ${C.bg}; color: ${C.text};
-    border: 1px solid ${C.border}; border-radius: 14px;
-    box-shadow: 0 16px 40px rgba(0, 0, 0, 0.22);
+    border: 1px solid ${C.border}; border-radius: 18px;
+    box-shadow:
+      0 24px 64px -12px rgba(15, 23, 42, 0.30),
+      0 8px 24px -8px rgba(15, 23, 42, 0.18);
     display: flex; flex-direction: column; overflow: hidden;
-    font: 13px/1.4 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font: 13px/1.5 -apple-system, "Segoe UI", Roboto, system-ui, sans-serif;
+    animation: uyap-bulk-fadeup .25s ease;
   }
   .uyap-bulk-panel[hidden] { display: none; }
 
+  @keyframes uyap-bulk-fadeup {
+    from { opacity: 0; transform: translateY(8px); }
+    to   { opacity: 1; transform: translateY(0); }
+  }
+
   .uyap-bulk-header {
-    padding: 12px 16px;
-    background: linear-gradient(135deg, ${C.primary}, ${C.accent}); color: #fff;
+    padding: 14px 16px;
+    background: linear-gradient(135deg, ${C.primary} 0%, ${C.accent} 75%, ${C.accent2} 100%);
+    color: #fff;
     display: flex; align-items: center; justify-content: space-between;
+    gap: 8px;
+  }
+  .uyap-bulk-header-actions {
+    display: flex; align-items: center; gap: 4px;
+  }
+  .uyap-bulk-pin {
+    background: rgba(255, 255, 255, .15); border: 0; color: #fff; cursor: pointer;
+    width: 28px; height: 28px; border-radius: 8px; font-size: 14px;
+    display: flex; align-items: center; justify-content: center;
+    transition: background .15s ease, transform .2s ease;
+  }
+  .uyap-bulk-pin:hover { background: rgba(255, 255, 255, .25); }
+  .uyap-bulk-pin.active {
+    background: ${C.yellow}; color: ${C.primary};
+    box-shadow: 0 0 12px rgba(255, 213, 79, 0.5);
+    transform: rotate(-12deg);
   }
   .uyap-bulk-header h3 { margin: 0; font-size: 14px; font-weight: 700; letter-spacing: .2px; }
   .uyap-bulk-header .brand { font-weight: 800; }
@@ -106,82 +140,170 @@
   .uyap-bulk-header .sub { display: block; font-size: 11px; font-weight: 500; opacity: .85; margin-top: 2px; }
   .uyap-bulk-close {
     background: rgba(255, 255, 255, .15); border: 0; color: #fff; cursor: pointer;
-    width: 26px; height: 26px; border-radius: 50%; font-size: 16px; line-height: 1;
+    width: 28px; height: 28px; border-radius: 8px; font-size: 18px; line-height: 1;
     display: flex; align-items: center; justify-content: center; transition: background .15s ease;
   }
   .uyap-bulk-close:hover { background: rgba(255, 255, 255, .28); }
 
-  .uyap-bulk-body { padding: 10px 14px; overflow: auto; flex: 1; background: ${C.panel}; }
+  .uyap-bulk-statusbar {
+    padding: 8px 14px; background: ${C.panel};
+    border-bottom: 1px solid ${C.border};
+    display: flex; align-items: center; gap: 8px;
+    font-size: 11.5px; color: ${C.textSoft}; font-weight: 500;
+    overflow-x: auto;
+  }
+  .uyap-bulk-statusbar .pill {
+    display: inline-flex; align-items: center; gap: 4px;
+    padding: 3px 8px; border-radius: 999px;
+    background: #fff; border: 1px solid ${C.border};
+    white-space: nowrap;
+  }
+  .uyap-bulk-statusbar .pill.active { background: ${C.accent}; color: #fff; border-color: ${C.accent}; }
+  .uyap-bulk-statusbar .pill.warn   { background: #fef3c7; color: #92400e; border-color: #fde68a; }
+  .uyap-bulk-statusbar .pill .dot {
+    width: 6px; height: 6px; border-radius: 50%; background: currentColor;
+  }
+  .uyap-bulk-statusbar kbd {
+    background: ${C.bg}; border: 1px solid ${C.border}; border-bottom-width: 2px;
+    border-radius: 5px; padding: 1px 5px; font: 10.5px ui-monospace, monospace;
+    color: ${C.textSoft};
+  }
+
+  .uyap-bulk-body { padding: 12px 14px; overflow: auto; flex: 1; background: ${C.panel}; }
   .uyap-bulk-footer {
-    padding: 10px 14px; background: ${C.bg};
+    padding: 12px 14px; background: ${C.bg};
     border-top: 1px solid ${C.border};
-    display: flex; gap: 6px;
+    display: flex; gap: 6px; align-items: center;
   }
 
   .uyap-bulk-row {
     display: flex; justify-content: space-between; align-items: center;
-    padding: 6px 0; gap: 8px;
+    padding: 8px 0; gap: 10px;
   }
-  .uyap-bulk-row + .uyap-bulk-row { border-top: 1px solid #ecedee; }
-  .uyap-bulk-row label { color: ${C.muted}; flex: 1; min-width: 0; }
-  .uyap-bulk-row strong { color: ${C.text}; font-size: 14px; }
+  .uyap-bulk-row + .uyap-bulk-row { border-top: 1px solid ${C.border}; }
+  .uyap-bulk-row label { color: ${C.textSoft}; flex: 1; min-width: 0; font-weight: 500; }
+  .uyap-bulk-row strong { color: ${C.text}; font-size: 14px; font-weight: 700; }
 
   .uyap-bulk-row input[type=number] {
-    width: 78px; padding: 5px 8px;
-    border: 1px solid ${C.border}; border-radius: 5px;
-    font: inherit; color: ${C.text}; background: #fff;
+    width: 82px; padding: 6px 9px;
+    border: 1px solid ${C.border}; border-radius: 7px;
+    font: inherit; color: ${C.text}; background: ${C.bg};
+    transition: border-color .15s ease, box-shadow .15s ease;
   }
   .uyap-bulk-row input[type=text],
   .uyap-bulk-row input[type=date] {
-    padding: 5px 8px; border: 1px solid ${C.border}; border-radius: 5px;
-    font: inherit; color: ${C.text}; background: #fff; width: 150px;
+    padding: 6px 10px; border: 1px solid ${C.border}; border-radius: 7px;
+    font: inherit; color: ${C.text}; background: ${C.bg}; width: 168px;
+    transition: border-color .15s ease, box-shadow .15s ease;
   }
-  .uyap-bulk-row input[type=checkbox] { transform: scale(1.1); cursor: pointer; flex: none; }
+  .uyap-bulk-row input[type=number]:focus,
+  .uyap-bulk-row input[type=text]:focus,
+  .uyap-bulk-row input[type=date]:focus,
+  .uyap-bulk-row select:focus {
+    outline: none; border-color: ${C.accent};
+    box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.12);
+  }
+  .uyap-bulk-row input[type=checkbox] {
+    appearance: none; -webkit-appearance: none;
+    width: 36px; height: 20px; border-radius: 999px;
+    background: ${C.borderStrong}; cursor: pointer; flex: none;
+    position: relative; transition: background .2s ease;
+  }
+  .uyap-bulk-row input[type=checkbox]::after {
+    content: ''; position: absolute; top: 2px; left: 2px;
+    width: 16px; height: 16px; border-radius: 50%; background: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.2); transition: transform .2s ease;
+  }
+  .uyap-bulk-row input[type=checkbox]:checked { background: ${C.accent}; }
+  .uyap-bulk-row input[type=checkbox]:checked::after { transform: translateX(16px); }
   .uyap-bulk-row select {
-    padding: 5px 8px; border: 1px solid ${C.border}; border-radius: 5px;
-    font: inherit; color: ${C.text}; background: #fff; cursor: pointer; min-width: 160px;
+    padding: 6px 10px; border: 1px solid ${C.border}; border-radius: 7px;
+    font: inherit; color: ${C.text}; background: ${C.bg}; cursor: pointer; min-width: 170px;
+    transition: border-color .15s ease, box-shadow .15s ease;
   }
 
   .uyap-bulk-section {
-    border: 1px solid ${C.border}; border-radius: 8px;
-    background: #fff; margin: 6px 0; overflow: hidden;
+    border: 1px solid ${C.border}; border-radius: 12px;
+    background: ${C.surface}; margin: 8px 0; overflow: hidden;
+    transition: box-shadow .2s ease, border-color .2s ease;
   }
+  .uyap-bulk-section.open { box-shadow: 0 4px 14px -8px rgba(15, 23, 42, 0.12); }
   .uyap-bulk-section-head {
-    padding: 8px 12px; cursor: pointer; user-select: none;
-    background: #f1f3f4; border-bottom: 1px solid ${C.border};
+    padding: 11px 14px; cursor: pointer; user-select: none;
+    background: ${C.surface};
     display: flex; justify-content: space-between; align-items: center;
-    font-weight: 600; font-size: 12.5px; color: ${C.text};
+    font-weight: 600; font-size: 13px; color: ${C.text};
+    transition: background .12s ease;
   }
-  .uyap-bulk-section-head:hover { background: #e8ebee; }
-  .uyap-bulk-section-head .chev { transition: transform .2s ease; }
+  .uyap-bulk-section-head:hover { background: #f8fafc; }
+  .uyap-bulk-section-head .head-left {
+    display: inline-flex; align-items: center; gap: 9px;
+  }
+  .uyap-bulk-section-head .head-icon {
+    width: 26px; height: 26px; border-radius: 8px;
+    background: linear-gradient(135deg, ${C.accent} 0%, ${C.accent2} 100%); color: #fff;
+    display: inline-flex; align-items: center; justify-content: center;
+    font-size: 13px; flex: none;
+  }
+  .uyap-bulk-section-head .chev {
+    color: ${C.muted}; transition: transform .25s ease; font-size: 10px;
+  }
   .uyap-bulk-section.open .uyap-bulk-section-head .chev { transform: rotate(90deg); }
-  .uyap-bulk-section-body { padding: 6px 12px 8px; display: none; }
+  .uyap-bulk-section.open .uyap-bulk-section-head {
+    border-bottom: 1px solid ${C.border};
+  }
+  .uyap-bulk-section-body { padding: 8px 14px 12px; display: none; }
   .uyap-bulk-section.open .uyap-bulk-section-body { display: block; }
   .uyap-bulk-section-head .badge {
-    background: ${C.accent}; color: #fff; font-size: 10.5px; font-weight: 600;
+    background: ${C.accent}; color: #fff; font-size: 10.5px; font-weight: 700;
     padding: 2px 7px; border-radius: 999px; margin-left: 6px;
+    min-width: 18px; text-align: center;
   }
 
   .uyap-bulk-hint {
-    font-size: 11px; color: ${C.muted}; padding: 4px 0 6px; line-height: 1.45;
+    font-size: 11.5px; color: ${C.muted}; padding: 5px 0 7px; line-height: 1.5;
   }
-  .uyap-bulk-hint b { color: ${C.warn}; }
+  .uyap-bulk-hint b { color: ${C.warn}; font-weight: 600; }
 
   .uyap-bulk-btn {
-    padding: 8px 12px; border: 0; border-radius: 7px;
-    background: ${C.accent}; color: #fff;
-    font: 600 12.5px system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
-    cursor: pointer; transition: background .15s ease, opacity .15s ease;
+    padding: 9px 14px; border: 0; border-radius: 9px;
+    background: linear-gradient(180deg, ${C.accent} 0%, ${C.primary} 100%); color: #fff;
+    font: 600 13px -apple-system, "Segoe UI", Roboto, system-ui, sans-serif;
+    cursor: pointer; transition: transform .12s ease, box-shadow .15s ease, filter .15s ease;
     white-space: nowrap;
+    box-shadow: 0 2px 6px -2px rgba(11, 61, 145, 0.4),
+                inset 0 1px 0 rgba(255, 255, 255, 0.15);
   }
-  .uyap-bulk-btn:hover:not([disabled]) { background: ${C.primary}; }
-  .uyap-bulk-btn[disabled] { opacity: .55; cursor: not-allowed; }
-  .uyap-bulk-btn.ghost { background: #fff; color: ${C.text}; border: 1px solid ${C.border}; }
-  .uyap-bulk-btn.ghost:hover:not([disabled]) { background: #f1f3f4; border-color: ${C.muted}; }
-  .uyap-bulk-btn.primary { background: ${C.primary}; }
-  .uyap-bulk-btn.primary:hover:not([disabled]) { background: ${C.primaryHover}; }
+  .uyap-bulk-btn:hover:not([disabled]) {
+    transform: translateY(-1px);
+    box-shadow: 0 6px 14px -4px rgba(11, 61, 145, 0.45),
+                inset 0 1px 0 rgba(255, 255, 255, 0.20);
+    filter: brightness(1.05);
+  }
+  .uyap-bulk-btn:active:not([disabled]) { transform: translateY(0); filter: brightness(0.96); }
+  .uyap-bulk-btn[disabled] { opacity: .5; cursor: not-allowed; box-shadow: none; }
+  .uyap-bulk-btn.ghost {
+    background: ${C.bg}; color: ${C.text}; border: 1px solid ${C.border};
+    box-shadow: none;
+  }
+  .uyap-bulk-btn.ghost:hover:not([disabled]) {
+    background: ${C.panel}; border-color: ${C.borderStrong};
+    transform: translateY(-1px); box-shadow: 0 2px 6px -2px rgba(15, 23, 42, 0.10);
+    filter: none;
+  }
+  .uyap-bulk-btn.primary {
+    background: linear-gradient(180deg, ${C.primary} 0%, ${C.primaryHover} 100%);
+  }
+  .uyap-bulk-btn.success {
+    background: linear-gradient(180deg, ${C.ok} 0%, #059669 100%);
+    box-shadow: 0 2px 6px -2px rgba(16, 185, 129, 0.4);
+  }
   .uyap-bulk-btn.flex { flex: 1; }
-  .uyap-bulk-btn.small { padding: 4px 10px; font-size: 11.5px; }
+  .uyap-bulk-btn.small { padding: 5px 10px; font-size: 11.5px; border-radius: 7px; }
+  .uyap-bulk-btn .kbd-hint {
+    margin-left: 6px; padding: 1px 5px; border-radius: 4px;
+    background: rgba(255,255,255,.22); font: 10px ui-monospace, monospace;
+  }
 
   .uyap-bulk-progress {
     height: 7px; background: #e8eaed; border-radius: 4px; overflow: hidden; margin-top: 10px;
@@ -217,7 +339,7 @@
   }
   .uyap-bulk-list-item {
     padding: 8px 10px; border-bottom: 1px solid #ecedee;
-    display: grid; grid-template-columns: 22px 1fr auto;
+    display: grid; grid-template-columns: 22px 1fr auto auto;
     gap: 8px; align-items: center; font-size: 12px;
   }
   .uyap-bulk-list-item:last-child { border-bottom: 0; }
@@ -281,7 +403,160 @@
   .uyap-bulk-chip.active { background: ${C.accent}; color: #fff; border-color: ${C.accent}; }
 
   .uyap-bulk-divider {
-    height: 1px; background: ${C.border}; margin: 6px 0;
+    height: 1px; background: ${C.border}; margin: 8px 0;
+  }
+
+  /* ====== Komut Paleti ====== */
+  .uyap-bulk-palette-backdrop {
+    position: fixed; inset: 0; z-index: 2147483647;
+    background: rgba(15, 23, 42, 0.55); backdrop-filter: blur(6px);
+    display: flex; align-items: flex-start; justify-content: center;
+    padding-top: 14vh; animation: uyap-bulk-fadein .15s ease;
+  }
+  @keyframes uyap-bulk-fadein { from { opacity: 0; } to { opacity: 1; } }
+  .uyap-bulk-palette {
+    width: 580px; max-width: calc(100vw - 40px);
+    background: ${C.bg}; border-radius: 14px;
+    box-shadow: 0 24px 64px -8px rgba(0,0,0,0.45);
+    overflow: hidden; display: flex; flex-direction: column;
+    animation: uyap-bulk-fadeup .2s ease;
+  }
+  .uyap-bulk-palette-input {
+    width: 100%; padding: 18px 20px; border: 0; border-bottom: 1px solid ${C.border};
+    font: 500 16px -apple-system, "Segoe UI", system-ui, sans-serif;
+    color: ${C.text}; background: ${C.bg}; outline: none;
+  }
+  .uyap-bulk-palette-input::placeholder { color: ${C.muted}; }
+  .uyap-bulk-palette-list {
+    max-height: 50vh; overflow-y: auto; padding: 6px;
+  }
+  .uyap-bulk-palette-item {
+    padding: 9px 12px; border-radius: 8px; cursor: pointer;
+    display: flex; gap: 10px; align-items: center;
+    color: ${C.text}; transition: background .1s;
+  }
+  .uyap-bulk-palette-item:hover, .uyap-bulk-palette-item.active {
+    background: ${C.panel};
+  }
+  .uyap-bulk-palette-item.active { background: ${C.accent}; color: #fff; }
+  .uyap-bulk-palette-item .pal-icon {
+    width: 30px; height: 30px; border-radius: 7px;
+    background: ${C.panel}; display: inline-flex; align-items: center; justify-content: center;
+    flex: none; font-size: 14px; color: ${C.accent};
+  }
+  .uyap-bulk-palette-item.active .pal-icon { background: rgba(255,255,255,.2); color: #fff; }
+  .uyap-bulk-palette-item .pal-content { flex: 1; min-width: 0; }
+  .uyap-bulk-palette-item .pal-title {
+    font-weight: 600; font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .uyap-bulk-palette-item .pal-sub {
+    font-size: 11.5px; opacity: .75; margin-top: 1px;
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+  }
+  .uyap-bulk-palette-item .pal-kbd {
+    font: 10.5px ui-monospace, monospace;
+    border: 1px solid ${C.border}; border-bottom-width: 2px;
+    background: ${C.bg}; color: ${C.textSoft};
+    border-radius: 4px; padding: 1px 5px; flex: none;
+  }
+  .uyap-bulk-palette-item.active .pal-kbd { background: rgba(255,255,255,.18); color: #fff; border-color: rgba(255,255,255,.3); }
+  .uyap-bulk-palette-footer {
+    padding: 8px 14px; border-top: 1px solid ${C.border};
+    background: ${C.panel}; font-size: 11px; color: ${C.muted};
+    display: flex; gap: 12px; justify-content: space-between; align-items: center;
+  }
+  .uyap-bulk-palette-footer kbd {
+    background: ${C.bg}; border: 1px solid ${C.border}; border-bottom-width: 2px;
+    border-radius: 4px; padding: 1px 5px; font: 10.5px ui-monospace, monospace;
+    color: ${C.textSoft}; margin: 0 2px;
+  }
+  .uyap-bulk-palette-empty {
+    padding: 24px; text-align: center; color: ${C.muted}; font-size: 13px;
+  }
+
+  /* ====== Tooltip ====== */
+  .uyap-bulk-tooltip {
+    position: fixed; z-index: 2147483646;
+    background: ${C.text}; color: #fff;
+    padding: 8px 11px; border-radius: 8px;
+    font-size: 11.5px; line-height: 1.5;
+    max-width: 320px; pointer-events: none;
+    box-shadow: 0 8px 24px -4px rgba(0,0,0,0.4);
+    opacity: 0; transform: translateY(-2px);
+    transition: opacity .15s ease, transform .15s ease;
+  }
+  .uyap-bulk-tooltip.show { opacity: 1; transform: translateY(0); }
+  .uyap-bulk-tooltip .tt-row { display: flex; gap: 6px; margin: 2px 0; }
+  .uyap-bulk-tooltip .tt-label { color: #94a3b8; font-weight: 500; min-width: 70px; }
+  .uyap-bulk-tooltip .tt-val { color: #f1f5f9; }
+  .uyap-bulk-tooltip .tt-tags { margin-top: 4px; display: flex; gap: 4px; flex-wrap: wrap; }
+  .uyap-bulk-tooltip .tt-tag {
+    background: ${C.accent}; padding: 1px 6px; border-radius: 4px; font-size: 10.5px;
+  }
+  .uyap-bulk-tooltip .tt-note {
+    margin-top: 6px; padding-top: 6px; border-top: 1px solid rgba(255,255,255,0.15);
+    color: ${C.yellow}; font-style: italic;
+  }
+
+  /* ====== Notes Popup ====== */
+  .uyap-bulk-note-pop {
+    position: fixed; z-index: 2147483647;
+    background: ${C.bg}; border: 1px solid ${C.border}; border-radius: 12px;
+    box-shadow: 0 16px 40px -8px rgba(0,0,0,0.3);
+    width: 320px; padding: 12px;
+    animation: uyap-bulk-fadeup .15s ease;
+  }
+  .uyap-bulk-note-pop h4 {
+    margin: 0 0 8px; font-size: 12.5px; color: ${C.text}; font-weight: 700;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .uyap-bulk-note-pop textarea {
+    width: 100%; padding: 8px 10px;
+    border: 1px solid ${C.border}; border-radius: 7px;
+    font: 12px -apple-system, "Segoe UI", system-ui;
+    resize: vertical; min-height: 60px; box-sizing: border-box;
+    outline: none; transition: border-color .15s ease, box-shadow .15s ease;
+  }
+  .uyap-bulk-note-pop textarea:focus {
+    border-color: ${C.accent}; box-shadow: 0 0 0 3px rgba(37,99,235,0.12);
+  }
+  .uyap-bulk-note-pop .tag-input {
+    margin-top: 6px; width: 100%; padding: 6px 9px;
+    border: 1px solid ${C.border}; border-radius: 7px;
+    font: 12px -apple-system, "Segoe UI", system-ui;
+    box-sizing: border-box; outline: none;
+  }
+  .uyap-bulk-note-pop .tag-input:focus { border-color: ${C.accent}; box-shadow: 0 0 0 3px rgba(37,99,235,0.12); }
+  .uyap-bulk-note-pop .tag-row {
+    display: flex; gap: 4px; flex-wrap: wrap; margin-top: 6px;
+  }
+  .uyap-bulk-note-pop .tag-pill {
+    background: #e0e7ff; color: #3730a3; font-size: 10.5px;
+    padding: 2px 7px; border-radius: 999px; display: inline-flex; align-items: center; gap: 4px;
+  }
+  .uyap-bulk-note-pop .tag-pill button {
+    background: none; border: 0; cursor: pointer; padding: 0;
+    color: #6366f1; font-size: 13px; line-height: 1;
+  }
+  .uyap-bulk-note-pop .note-actions {
+    margin-top: 10px; display: flex; gap: 6px; justify-content: flex-end;
+  }
+
+  /* ====== Önizleme listesi: notlar göstergesi ====== */
+  .uyap-bulk-list-item .note-mark {
+    width: 26px; height: 26px; border-radius: 6px;
+    background: transparent; border: 1px solid transparent; cursor: pointer;
+    display: inline-flex; align-items: center; justify-content: center;
+    color: ${C.muted}; font-size: 12px;
+    transition: all .15s ease;
+  }
+  .uyap-bulk-list-item .note-mark:hover { background: ${C.panel}; border-color: ${C.border}; color: ${C.text}; }
+  .uyap-bulk-list-item .note-mark.has-note {
+    background: #fef9c3; color: #854d0e; border-color: #fef08a;
+  }
+  .uyap-bulk-list-item .tag-mini {
+    background: #e0e7ff; color: #3730a3; font-size: 9.5px;
+    padding: 1px 5px; border-radius: 999px; margin-right: 3px;
   }
   `;
 
@@ -362,6 +637,65 @@
     return sanitize([d.esas, d.mahkeme].filter(Boolean).join('_')).slice(0, 100) || 'UYAP_Dosya';
   }
 
+  function makeEvrakKey(meta) {
+    const dosya = getOpenDosyaInfo().esas;
+    const birim = sanitize(meta['Birim Evrak No'] || '');
+    const aciklama = sanitize(meta['Açıklama'] || '').slice(0, 40);
+    const tarih = (meta['Onaylandığı Tarih'] || '').replace(/\//g, '-');
+    return `${dosya}::${birim}::${tarih}::${aciklama}`;
+  }
+
+  function getAllNotes() {
+    try { return JSON.parse(localStorage.getItem(STORAGE_NOTES) || '{}'); }
+    catch { return {}; }
+  }
+  function getNote(meta) {
+    return getAllNotes()[makeEvrakKey(meta)] || null;
+  }
+  function setNote(meta, note) {
+    const all = getAllNotes();
+    const key = makeEvrakKey(meta);
+    if (!note || (!note.text && (!note.tags || !note.tags.length))) {
+      delete all[key];
+    } else {
+      all[key] = note;
+    }
+    try { localStorage.setItem(STORAGE_NOTES, JSON.stringify(all)); } catch { /* ignore */ }
+  }
+
+  function getCategoryFolder(meta) {
+    const tur = sanitize(meta['Tür'] || '').toLowerCase();
+    if (!tur) return 'Diger';
+    if (/duruşma|durusma|celse|zapt/.test(tur)) return '01_Durusma_Zaptlari';
+    if (/karar|hüküm|hukum|gerekçeli/.test(tur)) return '02_Kararlar';
+    if (/bilirkişi|bilirkisi/.test(tur)) return '03_Bilirkisi_Raporlari';
+    if (/tebliğ|teblig|tebligat/.test(tur)) return '04_Tebligatlar';
+    if (/dilekçe|dilekce/.test(tur)) return '05_Dilekceler';
+    if (/müzekkere|muzekkere/.test(tur)) return '06_Muzekkereler';
+    if (/cevap|yanıt|yanit/.test(tur)) return '07_Cevap_Yazilari';
+    if (/iddianame|esas hakkında|esas hakkinda/.test(tur)) return '08_Iddianame_Esas';
+    if (/sorgu|ifade|beyan/.test(tur)) return '09_Sorgu_Ifadeler';
+    if (/rapor|inceleme/.test(tur)) return '10_Raporlar';
+    return '99_Diger';
+  }
+
+  function renderTemplate(tmpl, meta, index, ext) {
+    const tarih = (meta['Onaylandığı Tarih'] || meta['Sisteme Gönderildiği Tarih'] || '')
+      .replace(/\//g, '-');
+    const vars = {
+      tarih,
+      tur: sanitize(meta['Tür'] || 'Evrak').slice(0, 50),
+      aciklama: sanitize(meta['Açıklama'] || '').slice(0, 40),
+      birim: sanitize(meta['Birim Evrak No'] || ''),
+      sira: String(index).padStart(3, '0'),
+      gonderen: sanitize(meta['Gönderen Yer Kişi'] || '').slice(0, 30),
+      tip: sanitize(meta['Tip'] || ''),
+    };
+    let out = tmpl.replace(/\{(\w+)\}/g, (_, k) => vars[k] || '');
+    out = out.replace(/_+/g, '_').replace(/^_+|_+$/g, '');
+    return (out || 'Evrak') + ext;
+  }
+
   /* ============================== STATE ============================== */
   const state = {
     scanned: [],      // {row, treeNode, treeItem, meta, aria, date, type}
@@ -370,9 +704,29 @@
     queue: [],        // multi-case mode: [{row, ariaInfo}]
     isRunning: false,
     isQueueRunning: false,
+    fabPos: null,     // {left, top} - drag-bırak konumu
+    pinned: false,    // panel her zaman açık başlasın mı
   };
 
   let UI = {}; // DOM refs
+  let tooltipEl = null;
+  let notePopEl = null;
+  let paletteEl = null;
+
+  /* --- Persistent state ---- */
+  function loadPersistedState() {
+    try {
+      state.pinned = localStorage.getItem(STORAGE_PIN) === '1';
+      const pos = localStorage.getItem(STORAGE_FAB_POS);
+      if (pos) state.fabPos = JSON.parse(pos);
+    } catch { /* ignore */ }
+  }
+  function savePersistedFabPos() {
+    try { localStorage.setItem(STORAGE_FAB_POS, JSON.stringify(state.fabPos)); } catch {}
+  }
+  function savePinned() {
+    try { localStorage.setItem(STORAGE_PIN, state.pinned ? '1' : '0'); } catch {}
+  }
 
   /* ============================== UI BUILD ============================== */
   function buildUI() {
@@ -389,12 +743,24 @@
     const panel = el('div', { class: 'uyap-bulk-panel', hidden: true });
 
     /* ---- Header ---- */
+    UI.pinBtn = el('button', { class: 'uyap-bulk-pin' + (state.pinned ? ' active' : ''),
+      title: 'Paneli sabitle (sayfa yenilense de açık kalır)' }, '📌');
+    UI.pinBtn.addEventListener('click', () => {
+      state.pinned = !state.pinned;
+      UI.pinBtn.classList.toggle('active', state.pinned);
+      savePinned();
+      log(state.pinned ? 'Panel sabitlendi. Sayfayı yenilersen otomatik açılır.' : 'Panel sabit değil.', 'info');
+    });
+
     const header = el('div', { class: 'uyap-bulk-header' },
-      el('div', {},
+      el('div', { style: 'min-width: 0; flex: 1;' },
         el('h3', {}, el('span', { class: 'brand' }, 'Uyap'), el('span', { class: 'brand-plus' }, '+'),
           el('span', { class: 'brand-sub' }, ' Toplu Evrak İndirici')),
-        el('span', { class: 'sub' }, 'v2.0 — filtreler, ZIP, çoklu dosya')),
-      el('button', { class: 'uyap-bulk-close', title: 'Kapat' }, '×')
+        el('span', { class: 'sub' }, 'v2.1 — komut paleti, sürüklenebilir FAB, notlar')),
+      el('div', { class: 'uyap-bulk-header-actions' },
+        UI.pinBtn,
+        el('button', { class: 'uyap-bulk-close', title: 'Kapat (Esc)' }, '×')
+      )
     );
 
     /* ---- BODY ---- */
@@ -419,7 +785,7 @@
     updateHint();
 
     body.appendChild(
-      makeSection('genel', '⚙ Genel Ayarlar', true,
+      makeSection('genel', 'Genel Ayarlar', '⚙', true,
         el('div', { class: 'uyap-bulk-row' }, el('label', {}, 'Bulunan evrak:'), UI.countEl),
         el('div', { class: 'uyap-bulk-row' }, el('label', {}, 'İndirme formatı:'), UI.formatSelect),
         formatHint,
@@ -446,7 +812,7 @@
 
     UI.filterBadge = el('span', { class: 'badge', style: 'display:none' }, '0');
 
-    const filterSection = makeSection('filtre', '⚲ Filtreler (opsiyonel)', false,
+    const filterSection = makeSection('filtre', 'Filtreler (opsiyonel)', '⚲', false,
       el('div', { class: 'uyap-bulk-hint' },
         'Bu seçenekleri açtığınızda sadece kriterlere uyan evraklar indirilir. ',
         'Hiçbirini açmazsanız tüm evraklar indirilir.'),
@@ -472,15 +838,39 @@
     body.appendChild(filterSection);
 
     /* --- Section: Çıktı seçenekleri --- */
-    UI.useAutoFolder = makeToggle(); UI.useAutoFolder.checked = true;
-    UI.useZip        = makeToggle();
+    UI.useAutoFolder  = makeToggle(); UI.useAutoFolder.checked = true;
+    UI.useCategorize  = makeToggle();
+    UI.useZip         = makeToggle();
+    UI.useTemplate    = makeToggle();
+    UI.templateInput  = el('input', { type: 'text',
+      placeholder: DEFAULT_TEMPLATE,
+      style: 'width: 100%; font: 11.5px ui-monospace, Consolas, monospace;'
+    });
+    try {
+      const savedTmpl = localStorage.getItem(STORAGE_TEMPL);
+      if (savedTmpl) { UI.templateInput.value = savedTmpl; UI.useTemplate.checked = true; }
+    } catch {}
+    UI.templateInput.addEventListener('input', () => {
+      try { localStorage.setItem(STORAGE_TEMPL, UI.templateInput.value); } catch {}
+    });
+
     UI.exportCsvBtn  = el('button', { class: 'uyap-bulk-btn ghost small', onclick: exportCSV }, 'CSV / Excel Listesi İndir');
 
     body.appendChild(
-      makeSection('cikti', '↓ Çıktı Seçenekleri', true,
+      makeSection('cikti', 'Çıktı Seçenekleri', '↓', true,
         makeOpt('Otomatik alt klasör yapısı (Dosya_2025-849/...)', UI.useAutoFolder),
+        makeOpt('Türe göre kategorize et (Duruşma_Zaptları/, Kararlar/ vb.)', UI.useCategorize,
+          el('div', { class: 'uyap-bulk-hint' }, 'Evrak türüne göre otomatik alt klasörlere ayrılır. "Otomatik alt klasör"le birlikte çalışır.')),
         makeOpt('Tek ZIP arşivi olarak indir', UI.useZip,
           el('div', { class: 'uyap-bulk-hint' }, 'Tüm evraklar tek bir .zip dosyasında paketlenir. Büyük arşivler için RAM kullanımı artar.')),
+        makeOpt('Özel dosya adı şablonu kullan', UI.useTemplate,
+          el('div', { class: 'uyap-bulk-hint' },
+            'Placeholderlar: ',
+            el('code', {}, '{tarih}'), ' ', el('code', {}, '{tur}'), ' ',
+            el('code', {}, '{aciklama}'), ' ', el('code', {}, '{birim}'), ' ',
+            el('code', {}, '{sira}'), ' ', el('code', {}, '{gonderen}'), ' ',
+            el('code', {}, '{tip}')),
+          UI.templateInput),
         el('div', { class: 'uyap-bulk-divider' }),
         el('div', { class: 'uyap-bulk-hint' }, 'Evrak listesini Excel\'de açabileceğin CSV (UTF-8) dosyası olarak çıkar:'),
         UI.exportCsvBtn,
@@ -498,7 +888,7 @@
     UI.clearQueueBtn = el('button', { class: 'uyap-bulk-btn ghost small', onclick: clearQueue }, 'Kuyruğu Temizle');
 
     body.appendChild(
-      makeSection('gelismis', '⚙ Gelişmiş', false,
+      makeSection('gelismis', 'Gelişmiş', '⚡', false,
         makeOpt('Çoklu dosya kuyruğu (birden fazla dosyayı sırayla işle)', UI.useMultiCase,
           el('div', { class: 'uyap-bulk-hint' },
             'Kuyruğa eklediğin her dosya teker teker otomatik açılır, evrakları indirilir ve sonraki dosyaya geçilir. ',
@@ -523,7 +913,7 @@
     UI.previewToolbar.appendChild(UI.previewCount);
 
     body.appendChild(
-      makeSection('onizleme', '📑 Önizleme — Evrak Listesi', false,
+      makeSection('onizleme', 'Önizleme — Evrak Listesi', '📑', false,
         el('div', { class: 'uyap-bulk-hint' }, 'Tarama sonrası tüm evraklar burada listelenir. Üzerine tıklayarak UYAP\'ta önizleyebilirsin. Filtreler uygulandığında sönükleştirilir.'),
         UI.previewToolbar,
         UI.previewList,
@@ -544,9 +934,16 @@
     UI.saveLogBtn = el('button', { class: 'uyap-bulk-btn ghost small', onclick: saveLog }, 'Log Kaydet');
     UI.startBtn = el('button', { class: 'uyap-bulk-btn flex', disabled: true, onclick: onStart }, 'İndirmeyi Başlat');
 
-    const footer = el('div', { class: 'uyap-bulk-footer' }, UI.scanBtn, UI.saveLogBtn, UI.startBtn);
+    /* ---- Status bar ---- */
+    UI.statusBar = el('div', { class: 'uyap-bulk-statusbar' });
+
+    UI.paletteBtn = el('button', { class: 'uyap-bulk-btn ghost small', onclick: openPalette,
+      title: 'Komut paleti (Ctrl+K)' }, '⌘ Komut');
+    const footer = el('div', { class: 'uyap-bulk-footer' },
+      UI.paletteBtn, UI.scanBtn, UI.saveLogBtn, UI.startBtn);
 
     panel.appendChild(header);
+    panel.appendChild(UI.statusBar);
     panel.appendChild(body);
     panel.appendChild(footer);
 
@@ -555,10 +952,23 @@
 
     UI.panel = panel; UI.fab = fab;
 
+    // Sürükle-bırak FAB konumu
+    setupDraggableFab(fab);
+    applyFabPos();
+
+    // Pin aktifse panel açık başlasın
+    if (state.pinned) {
+      panel.hidden = false;
+      fab.classList.add('open');
+    }
+
+    refreshStatusBar();
+
     const syncFabState = () => {
       fab.classList.toggle('open', !panel.hidden);
     };
-    fab.addEventListener('click', () => {
+    fab.addEventListener('click', (e) => {
+      if (fab._uyapWasDragging) { fab._uyapWasDragging = false; return; }
       panel.hidden = !panel.hidden;
       syncFabState();
       if (!panel.hidden && !state.scanned.length) onScan();
@@ -586,10 +996,13 @@
     refreshOnlyNewInfo();
   }
 
-  function makeSection(id, title, openByDefault, ...children) {
+  function makeSection(id, title, icon, openByDefault, ...children) {
     const head = el('div', { class: 'uyap-bulk-section-head' },
-      el('span', {}, el('span', { class: 'chev' }, '▶ '), title),
-      el('span', {}, ' ')
+      el('span', { class: 'head-left' },
+        el('span', { class: 'head-icon' }, icon || '•'),
+        el('span', {}, title)
+      ),
+      el('span', {}, el('span', { class: 'chev' }, '▶'))
     );
     const body = el('div', { class: 'uyap-bulk-section-body' }, ...children);
     const section = el('div', { class: 'uyap-bulk-section' + (openByDefault ? ' open' : '') }, head, body);
@@ -694,6 +1107,7 @@
     refreshTypeChips();
     refreshOnlyNewInfo();
     applyFiltersAndRefresh();
+    refreshStatusBar();
 
     if (state.scanned.length === 0) {
       log('Hiç evrak bulunamadı. "Tüm Evrak" veya "Son 20 Evrak" klasörü açık mı?', 'warn');
@@ -872,7 +1286,7 @@
 
       let cb = null;
       if (selMode && inFilter) {
-        cb = el('input', { type: 'checkbox' });
+        cb = el('input', { type: 'checkbox', style: 'transform: scale(1); appearance: auto; width: auto; height: auto; background: none; border-radius: 3px;' });
         cb.checked = state.selected.has(s.index);
         cb.addEventListener('change', () => {
           if (cb.checked) state.selected.add(s.index);
@@ -890,18 +1304,49 @@
       const turStr = meta['Tür'] || '—';
       const aciklamaStr = meta['Açıklama'] || '';
       const birim = meta['Birim Evrak No'] || '';
+      const note = getNote(meta);
+
+      const tagBox = el('span');
+      if (note?.tags?.length) {
+        note.tags.slice(0, 3).forEach((t) => tagBox.appendChild(el('span', { class: 'tag-mini' }, '# ' + t)));
+      }
 
       const metaEl = el('div', { class: 'meta' },
-        el('div', { class: 'title', title: s.aria }, `${turStr}${aciklamaStr ? ' — ' + aciklamaStr : ''}`),
+        el('div', { class: 'title' }, `${turStr}${aciklamaStr ? ' — ' + aciklamaStr : ''}`),
         el('div', { class: 'sub' },
           el('span', {}, tarihStr),
           birim ? el('span', {}, '№ ' + birim) : null,
           meta['Gönderen Yer Kişi'] ? el('span', { title: 'Gönderen' }, '↳ ' + meta['Gönderen Yer Kişi'].slice(0, 40)) : null,
+          tagBox,
         )
       );
+
+      let hoverTimer = null;
+      const triggerTooltip = () => {
+        hoverTimer = setTimeout(() => showTooltip(metaEl, meta), 350);
+      };
+      const cancelTooltip = () => {
+        if (hoverTimer) { clearTimeout(hoverTimer); hoverTimer = null; }
+        hideTooltip();
+      };
+      metaEl.addEventListener('mouseenter', triggerTooltip);
+      metaEl.addEventListener('mouseleave', cancelTooltip);
+      metaEl.addEventListener('click', cancelTooltip);
+
       item.appendChild(metaEl);
 
-      const peekBtn = el('button', { class: 'peek', title: 'UYAP önizleyicide aç' }, '👁 Önizle');
+      const noteBtn = el('button', {
+        class: 'note-mark' + (note ? ' has-note' : ''),
+        title: note ? 'Not / etiket düzenle' : 'Not / etiket ekle'
+      }, '✎');
+      noteBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        hideTooltip();
+        openNotePopup(noteBtn, meta, () => refreshPreview());
+      });
+      item.appendChild(noteBtn);
+
+      const peekBtn = el('button', { class: 'peek', title: 'UYAP önizleyicide aç' }, '👁');
       peekBtn.addEventListener('click', () => {
         try { s.treeItem?.click(); } catch (_) {}
       });
@@ -921,11 +1366,12 @@
       ? state.scanned.filter((s) => state.selected.has(s.index))
       : state.filtered.length ? state.filtered : state.scanned);
 
-    const headers = ['Sıra', 'Tarih', 'Tür', 'Açıklama', 'Birim Evrak No', 'Gönderen', 'Gönderen Dosya No', 'Tip', 'Sisteme Gönderildiği'];
+    const headers = ['Sıra', 'Tarih', 'Tür', 'Açıklama', 'Birim Evrak No', 'Gönderen', 'Gönderen Dosya No', 'Tip', 'Sisteme Gönderildiği', 'Etiketler', 'Not'];
     const csvRows = [headers.join(';')];
 
     rows.forEach((s, i) => {
       const m = s.meta;
+      const note = getNote(m);
       const fields = [
         i + 1,
         m['Onaylandığı Tarih'] || '',
@@ -936,6 +1382,8 @@
         m['Gönderen Dosya No'] || '',
         m['Tip'] || '',
         m['Sisteme Gönderildiği Tarih'] || '',
+        note?.tags?.join(', ') || '',
+        note?.text || '',
       ];
       csvRows.push(fields.map(csvCell).join(';'));
     });
@@ -966,6 +1414,7 @@
   /* ============================== QUEUE ============================== */
   function refreshQueue() {
     if (!UI.queueList) return;
+    refreshStatusBar();
     UI.queueList.innerHTML = '';
     if (!state.queue.length) {
       UI.queueList.classList.add('uyap-bulk-list-empty');
@@ -1205,12 +1654,16 @@
   }
 
   function getFilenameWithFolder(meta, index, ext) {
-    const base = makeFilename(meta, index, ext);
-    if (UI.useAutoFolder?.checked) {
-      const folder = getOpenDosyaFolderName();
-      return `${folder}/${base}`;
-    }
-    return base;
+    const useTmpl = UI.useTemplate?.checked && (UI.templateInput?.value || '').trim();
+    const base = useTmpl
+      ? sanitize(renderTemplate(UI.templateInput.value.trim(), meta, index, ext))
+      : makeFilename(meta, index, ext);
+
+    const parts = [];
+    if (UI.useAutoFolder?.checked) parts.push(getOpenDosyaFolderName());
+    if (UI.useCategorize?.checked) parts.push(getCategoryFolder(meta));
+    parts.push(base);
+    return parts.join('/');
   }
 
   async function packageAsZip(items, zipName) {
@@ -1474,11 +1927,385 @@
     } catch (_) {}
   }
 
+  /* ============================== DRAG FAB ============================== */
+  function applyFabPos() {
+    if (!UI.fab) return;
+    if (state.fabPos && state.fabPos.left != null && state.fabPos.top != null) {
+      UI.fab.style.left = state.fabPos.left + 'px';
+      UI.fab.style.top  = state.fabPos.top + 'px';
+      UI.fab.style.bottom = 'auto';
+      UI.fab.style.right  = 'auto';
+      repositionPanel();
+    }
+  }
+
+  function repositionPanel() {
+    if (!UI.fab || !UI.panel) return;
+    const fabRect = UI.fab.getBoundingClientRect();
+    const panelHeight = Math.min(window.innerHeight * 0.84, 700);
+    const panelWidth = 520;
+    let top = fabRect.top - panelHeight - 12;
+    let left = fabRect.left;
+    if (top < 12) top = fabRect.bottom + 12;
+    if (top + panelHeight > window.innerHeight - 12) top = Math.max(12, window.innerHeight - panelHeight - 12);
+    if (left + panelWidth > window.innerWidth - 12) left = window.innerWidth - panelWidth - 12;
+    if (left < 12) left = 12;
+    UI.panel.style.left = left + 'px';
+    UI.panel.style.top  = top + 'px';
+    UI.panel.style.bottom = 'auto';
+    UI.panel.style.right  = 'auto';
+  }
+
+  function setupDraggableFab(fab) {
+    let dragging = false, startX = 0, startY = 0, startLeft = 0, startTop = 0;
+    let didDrag = false;
+    fab.addEventListener('mousedown', (e) => {
+      if (e.button !== 0) return;
+      dragging = true; didDrag = false;
+      const rect = fab.getBoundingClientRect();
+      startX = e.clientX; startY = e.clientY;
+      startLeft = rect.left; startTop = rect.top;
+      fab.style.transition = 'none';
+      e.preventDefault();
+    });
+    document.addEventListener('mousemove', (e) => {
+      if (!dragging) return;
+      const dx = e.clientX - startX, dy = e.clientY - startY;
+      if (!didDrag && Math.hypot(dx, dy) > 4) didDrag = true;
+      if (!didDrag) return;
+      const newLeft = Math.max(8, Math.min(window.innerWidth - fab.offsetWidth - 8, startLeft + dx));
+      const newTop  = Math.max(8, Math.min(window.innerHeight - fab.offsetHeight - 8, startTop + dy));
+      fab.style.left = newLeft + 'px';
+      fab.style.top  = newTop + 'px';
+      fab.style.bottom = 'auto';
+      fab.style.right  = 'auto';
+      if (UI.panel && !UI.panel.hidden) repositionPanel();
+    });
+    document.addEventListener('mouseup', () => {
+      if (!dragging) return;
+      dragging = false;
+      fab.style.transition = '';
+      if (didDrag) {
+        const rect = fab.getBoundingClientRect();
+        state.fabPos = { left: rect.left, top: rect.top };
+        savePersistedFabPos();
+        fab._uyapWasDragging = true;
+      }
+    });
+    window.addEventListener('resize', () => {
+      if (UI.panel && !UI.panel.hidden) repositionPanel();
+    });
+  }
+
+  /* ============================== STATUS BAR ============================== */
+  function refreshStatusBar() {
+    if (!UI.statusBar) return;
+    UI.statusBar.innerHTML = '';
+
+    const dosya = getOpenDosyaInfo();
+    const dosyaText = dosya.esas && dosya.esas !== 'Dosya'
+      ? `📁 ${dosya.esas}${dosya.mahkeme ? ' — ' + dosya.mahkeme.slice(0, 28) : ''}`
+      : '📁 Dosya açık değil';
+
+    UI.statusBar.appendChild(el('span', { class: 'pill', title: dosya.raw || '' }, dosyaText));
+
+    if (state.scanned.length) {
+      UI.statusBar.appendChild(el('span', { class: 'pill active' },
+        el('span', { class: 'dot' }), `${state.filtered.length} / ${state.scanned.length} evrak`));
+    }
+
+    if (state.queue.length) {
+      UI.statusBar.appendChild(el('span', { class: 'pill warn' }, `🗂 Kuyrukta ${state.queue.length} dosya`));
+    }
+
+    const tipBox = el('span', { style: 'margin-left: auto; display: inline-flex; gap: 4px; align-items: center;' },
+      el('kbd', {}, 'Ctrl'), '+', el('kbd', {}, 'K'), el('span', { style: 'margin-left: 4px;' }, 'komut paleti'));
+    UI.statusBar.appendChild(tipBox);
+  }
+
+  /* ============================== COMMAND PALETTE ============================== */
+  function getCommands() {
+    const cmds = [
+      { id: 'scan', icon: '🔍', title: 'Evrakları Tara', sub: 'Açık dosyadaki tüm evrakları listeden geçir', action: onScan, kbd: 'Ctrl+Shift+S' },
+      { id: 'start', icon: '⬇', title: 'İndirmeyi Başlat', sub: 'Filtrelenmiş evrakları indir', action: onStart, kbd: 'Ctrl+Shift+D' },
+      { id: 'csv', icon: '📊', title: 'CSV / Excel Listesi İndir', sub: 'Evrak metadata\'sını CSV olarak çıkar', action: exportCSV },
+      { id: 'savelog', icon: '📝', title: 'Log Kaydet', sub: 'Mevcut log\'u .txt olarak indir', action: saveLog },
+      { id: 'toggle-zip', icon: '📦', title: (UI.useZip?.checked ? '☑ ' : '☐ ') + 'ZIP Modu', sub: 'Tüm evrakları tek arşivde topla', action: () => { UI.useZip.checked = !UI.useZip.checked; } },
+      { id: 'toggle-pdf', icon: '📄', title: (UI.formatSelect?.value === 'pdf' ? '☑ ' : '☐ ') + 'PDF Modu', sub: 'UDF yerine PDF formatında indir', action: () => { UI.formatSelect.value = UI.formatSelect.value === 'pdf' ? 'udf' : 'pdf'; UI.formatSelect.dispatchEvent(new Event('change')); } },
+      { id: 'toggle-cat', icon: '🗂', title: (UI.useCategorize?.checked ? '☑ ' : '☐ ') + 'Türe Göre Kategorize', sub: 'Otomatik alt klasörlere ayır', action: () => { UI.useCategorize.checked = !UI.useCategorize.checked; } },
+      { id: 'toggle-select', icon: '☑', title: (UI.useSelection?.checked ? '☑ ' : '☐ ') + 'Seçim Modu', sub: 'Tek tek seçerek indir', action: () => { UI.useSelection.checked = !UI.useSelection.checked; UI.useSelection.dispatchEvent(new Event('change')); } },
+      { id: 'pin', icon: '📌', title: (state.pinned ? '☑ ' : '☐ ') + 'Paneli Sabitle', sub: 'Sayfa yenilense de açık kalsın', action: () => UI.pinBtn.click() },
+      { id: 'reset-filters', icon: '↻', title: 'Filtreleri Sıfırla', sub: 'Tüm aktif filtreleri kapat', action: resetFilters },
+      { id: 'reset-fab', icon: '⟲', title: 'Butonu varsayılan konuma al', sub: 'Sol alt köşeye geri taşı', action: () => {
+        state.fabPos = null; try { localStorage.removeItem(STORAGE_FAB_POS); } catch {}
+        UI.fab.style.left = ''; UI.fab.style.top = ''; UI.fab.style.right = ''; UI.fab.style.bottom = '';
+        if (UI.panel && !UI.panel.hidden) repositionPanel();
+      } },
+    ];
+
+    state.scanned.forEach((s, i) => {
+      const m = s.meta;
+      cmds.push({
+        id: 'evrak-' + i,
+        icon: '📄',
+        title: (m['Tür'] || 'Evrak') + (m['Açıklama'] ? ' — ' + m['Açıklama'] : ''),
+        sub: `${m['Onaylandığı Tarih'] || '—'}  •  ${m['Birim Evrak No'] || ''}`.trim(),
+        action: () => { try { s.treeItem?.click(); } catch {} },
+        searchData: [s.aria, m['Tür'], m['Açıklama'], m['Gönderen Yer Kişi'], m['Birim Evrak No']].join(' ').toLowerCase(),
+      });
+    });
+
+    return cmds;
+  }
+
+  function openPalette() {
+    if (paletteEl) return;
+    if (UI.panel && UI.panel.hidden) {
+      UI.panel.hidden = false;
+      UI.fab?.classList.add('open');
+    }
+
+    const cmds = getCommands();
+    let filtered = cmds.slice();
+    let active = 0;
+
+    const input = el('input', { class: 'uyap-bulk-palette-input', placeholder: '🔍  Komut veya evrak ara…', autocomplete: 'off' });
+    const list = el('div', { class: 'uyap-bulk-palette-list' });
+    const footer = el('div', { class: 'uyap-bulk-palette-footer' },
+      el('span', {}, el('kbd', {}, '↑'), el('kbd', {}, '↓'), ' gez  ',
+        el('kbd', {}, '↵'), ' seç  ',
+        el('kbd', {}, 'Esc'), ' kapat'),
+      el('span', {}, `${cmds.length} komut`));
+
+    const palette = el('div', { class: 'uyap-bulk-palette' }, input, list, footer);
+    const backdrop = el('div', { class: 'uyap-bulk-palette-backdrop' }, palette);
+    document.body.appendChild(backdrop);
+    paletteEl = backdrop;
+
+    const render = () => {
+      list.innerHTML = '';
+      if (!filtered.length) {
+        list.appendChild(el('div', { class: 'uyap-bulk-palette-empty' }, 'Eşleşen komut yok.'));
+        return;
+      }
+      filtered.slice(0, 80).forEach((c, i) => {
+        const item = el('div', { class: 'uyap-bulk-palette-item' + (i === active ? ' active' : '') },
+          el('div', { class: 'pal-icon' }, c.icon),
+          el('div', { class: 'pal-content' },
+            el('div', { class: 'pal-title' }, c.title),
+            c.sub ? el('div', { class: 'pal-sub' }, c.sub) : null),
+          c.kbd ? el('div', { class: 'pal-kbd' }, c.kbd) : null);
+        item.addEventListener('click', () => execute(i));
+        item.addEventListener('mouseenter', () => { active = i; updateActive(); });
+        list.appendChild(item);
+      });
+    };
+
+    const updateActive = () => {
+      list.querySelectorAll('.uyap-bulk-palette-item').forEach((n, i) => {
+        n.classList.toggle('active', i === active);
+      });
+      const activeNode = list.querySelector('.uyap-bulk-palette-item.active');
+      if (activeNode) activeNode.scrollIntoView({ block: 'nearest' });
+    };
+
+    const execute = (i) => {
+      const cmd = filtered[i];
+      if (!cmd) return;
+      closePalette();
+      setTimeout(() => { try { cmd.action(); refreshStatusBar(); updateActionButtonCount(); } catch (e) { console.error(e); } }, 50);
+    };
+
+    const onInput = () => {
+      const q = input.value.trim().toLocaleLowerCase('tr');
+      filtered = !q ? cmds.slice() : cmds.filter((c) => {
+        const hay = ((c.title + ' ' + (c.sub || '') + ' ' + (c.searchData || ''))).toLocaleLowerCase('tr');
+        return hay.includes(q);
+      });
+      active = 0;
+      render();
+    };
+
+    const onKey = (e) => {
+      if (e.key === 'Escape') { e.preventDefault(); closePalette(); }
+      else if (e.key === 'ArrowDown') { e.preventDefault(); active = Math.min(filtered.length - 1, active + 1); updateActive(); }
+      else if (e.key === 'ArrowUp') { e.preventDefault(); active = Math.max(0, active - 1); updateActive(); }
+      else if (e.key === 'Enter') { e.preventDefault(); execute(active); }
+    };
+
+    input.addEventListener('input', onInput);
+    input.addEventListener('keydown', onKey);
+    backdrop.addEventListener('click', (e) => { if (e.target === backdrop) closePalette(); });
+
+    setTimeout(() => input.focus(), 30);
+    render();
+  }
+
+  function closePalette() {
+    if (paletteEl) { paletteEl.remove(); paletteEl = null; }
+  }
+
+  /* ============================== TOOLTIP ============================== */
+  function showTooltip(target, meta) {
+    hideTooltip();
+    const note = getNote(meta);
+    const rows = [];
+    if (meta['Tür']) rows.push({ l: 'Tür', v: meta['Tür'] });
+    if (meta['Açıklama']) rows.push({ l: 'Açıklama', v: meta['Açıklama'] });
+    if (meta['Onaylandığı Tarih']) rows.push({ l: 'Tarih', v: meta['Onaylandığı Tarih'] });
+    if (meta['Birim Evrak No']) rows.push({ l: 'Birim No', v: meta['Birim Evrak No'] });
+    if (meta['Gönderen Yer Kişi']) rows.push({ l: 'Gönderen', v: meta['Gönderen Yer Kişi'] });
+    if (meta['Tip']) rows.push({ l: 'Tip', v: meta['Tip'] });
+
+    tooltipEl = el('div', { class: 'uyap-bulk-tooltip' });
+    rows.forEach((r) => {
+      tooltipEl.appendChild(el('div', { class: 'tt-row' },
+        el('span', { class: 'tt-label' }, r.l + ':'),
+        el('span', { class: 'tt-val' }, r.v)));
+    });
+    if (note?.tags?.length) {
+      const tags = el('div', { class: 'tt-tags' });
+      note.tags.forEach((t) => tags.appendChild(el('span', { class: 'tt-tag' }, '# ' + t)));
+      tooltipEl.appendChild(tags);
+    }
+    if (note?.text) {
+      tooltipEl.appendChild(el('div', { class: 'tt-note' }, '✎ ' + note.text));
+    }
+
+    document.body.appendChild(tooltipEl);
+    const r = target.getBoundingClientRect();
+    const ttRect = tooltipEl.getBoundingClientRect();
+    let left = r.right + 8;
+    let top = r.top;
+    if (left + ttRect.width > window.innerWidth - 8) left = r.left - ttRect.width - 8;
+    if (top + ttRect.height > window.innerHeight - 8) top = window.innerHeight - ttRect.height - 8;
+    tooltipEl.style.left = Math.max(8, left) + 'px';
+    tooltipEl.style.top = Math.max(8, top) + 'px';
+    requestAnimationFrame(() => tooltipEl?.classList.add('show'));
+  }
+  function hideTooltip() {
+    if (tooltipEl) { tooltipEl.remove(); tooltipEl = null; }
+  }
+
+  /* ============================== NOTES POPUP ============================== */
+  function openNotePopup(anchor, meta, onSaved) {
+    closeNotePopup();
+    const existing = getNote(meta) || { text: '', tags: [] };
+    const tags = Array.isArray(existing.tags) ? existing.tags.slice() : [];
+
+    const textarea = el('textarea', { placeholder: 'Bu evrakla ilgili not yaz...' });
+    textarea.value = existing.text || '';
+
+    const tagInput = el('input', { type: 'text', class: 'tag-input', placeholder: 'Etiket ekle ve Enter\'a bas (örn: önemli)' });
+
+    const tagRow = el('div', { class: 'tag-row' });
+    const renderTags = () => {
+      tagRow.innerHTML = '';
+      tags.forEach((t, i) => {
+        const x = el('button', { title: 'Kaldır' }, '×');
+        x.addEventListener('click', () => { tags.splice(i, 1); renderTags(); });
+        tagRow.appendChild(el('span', { class: 'tag-pill' }, '# ' + t, x));
+      });
+    };
+    renderTags();
+
+    tagInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter') {
+        e.preventDefault();
+        const v = tagInput.value.trim();
+        if (v && !tags.includes(v)) { tags.push(v); tagInput.value = ''; renderTags(); }
+      }
+    });
+
+    const closeBtn = el('button', { class: 'uyap-bulk-close', style: 'background: #f1f3f4; color: ' + C.text + ';' }, '×');
+    closeBtn.addEventListener('click', closeNotePopup);
+
+    const cancelBtn = el('button', { class: 'uyap-bulk-btn ghost small', onclick: closeNotePopup }, 'İptal');
+    const saveBtn = el('button', { class: 'uyap-bulk-btn small', onclick: () => {
+      const note = { text: textarea.value.trim(), tags };
+      setNote(meta, note);
+      closeNotePopup();
+      if (typeof onSaved === 'function') onSaved();
+    } }, 'Kaydet');
+
+    notePopEl = el('div', { class: 'uyap-bulk-note-pop' },
+      el('h4', {}, 'Not & Etiketler', closeBtn),
+      textarea, tagInput, tagRow,
+      el('div', { class: 'note-actions' }, cancelBtn, saveBtn));
+
+    document.body.appendChild(notePopEl);
+    const r = anchor.getBoundingClientRect();
+    let top = r.bottom + 6, left = r.left - 280;
+    const popRect = notePopEl.getBoundingClientRect();
+    if (left < 8) left = 8;
+    if (left + popRect.width > window.innerWidth - 8) left = window.innerWidth - popRect.width - 8;
+    if (top + popRect.height > window.innerHeight - 8) top = r.top - popRect.height - 6;
+    notePopEl.style.left = left + 'px';
+    notePopEl.style.top  = Math.max(8, top) + 'px';
+
+    setTimeout(() => textarea.focus(), 30);
+
+    const outClickHandler = (e) => {
+      if (notePopEl && !notePopEl.contains(e.target) && e.target !== anchor) {
+        closeNotePopup();
+        document.removeEventListener('mousedown', outClickHandler, true);
+      }
+    };
+    setTimeout(() => document.addEventListener('mousedown', outClickHandler, true), 50);
+  }
+  function closeNotePopup() {
+    if (notePopEl) { notePopEl.remove(); notePopEl = null; }
+  }
+
+  /* ============================== KEYBOARD SHORTCUTS ============================== */
+  function setupShortcuts() {
+    document.addEventListener('keydown', (e) => {
+      const ctrl = e.ctrlKey || e.metaKey;
+      const shift = e.shiftKey;
+      const tag = (e.target?.tagName || '').toLowerCase();
+      const inEditable = tag === 'input' || tag === 'textarea' || e.target?.isContentEditable;
+      const inOurInput = e.target?.closest?.('#uyap-bulk-root, .uyap-bulk-palette-backdrop, .uyap-bulk-note-pop');
+
+      if (ctrl && (e.key === 'k' || e.key === 'K')) {
+        e.preventDefault();
+        if (paletteEl) closePalette();
+        else openPalette();
+        return;
+      }
+
+      if (e.key === 'Escape') {
+        if (paletteEl) { closePalette(); return; }
+        if (notePopEl) { closeNotePopup(); return; }
+        if (UI.panel && !UI.panel.hidden && !state.pinned) {
+          UI.panel.hidden = true;
+          UI.fab?.classList.remove('open');
+        }
+        return;
+      }
+
+      if (inEditable && !inOurInput) return;
+
+      if (ctrl && shift && (e.key === 'u' || e.key === 'U')) {
+        e.preventDefault();
+        if (UI.fab) UI.fab.click();
+      } else if (ctrl && shift && (e.key === 's' || e.key === 'S')) {
+        e.preventDefault();
+        if (!UI.panel.hidden) onScan();
+        else { UI.fab?.click(); }
+      } else if (ctrl && shift && (e.key === 'd' || e.key === 'D')) {
+        e.preventDefault();
+        if (!UI.panel.hidden) onStart();
+      }
+    }, true);
+  }
+
   /* ============================== INIT ============================== */
   function init() {
     try {
+      loadPersistedState();
       injectCSS();
       buildUI();
+      setupShortcuts();
     } catch (e) {
       console.error('[UYAP Toplu İndirici] başlatma hatası:', e);
     }
