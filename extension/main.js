@@ -17,16 +17,16 @@
   };
 
   const C = {
-    primary: '#0b3d91', primaryHover: '#082e6e', accent: '#2563eb',
-    accentSoft: '#3b82f6', accent2: '#60a5fa',
-    ok: '#10b981', warn: '#f59e0b', err: '#ef4444',
-    bg: '#ffffff', panel: '#f4f6f9', surface: '#ffffff',
-    border: '#e2e8f0', borderStrong: '#cbd5e1',
-    text: '#0f172a', textSoft: '#334155', muted: '#64748b',
-    logBg: '#0b1220', logText: '#cbd5e1',
-    yellow: '#ffd54f',
-    shadow: '0 4px 24px -4px rgba(15, 23, 42, 0.08), 0 12px 48px -12px rgba(15, 23, 42, 0.12)',
-    shadowStrong: '0 25px 50px -12px rgba(15, 23, 42, 0.18)',
+    primary: '#1e40af', primaryHover: '#1d4ed8', accent: '#2563eb',
+    accentSoft: '#3b82f6', accent2: '#93c5fd',
+    ok: '#059669', warn: '#d97706', err: '#dc2626',
+    bg: '#ffffff', panel: '#f4f5f7', surface: '#ffffff',
+    border: '#e8eaef', borderStrong: '#d1d5db',
+    text: '#0f172a', textSoft: '#475569', muted: '#64748b',
+    logBg: '#1e293b', logText: '#e2e8f0',
+    yellow: '#f59e0b',
+    shadow: '0 1px 2px rgba(15, 23, 42, 0.05)',
+    shadowStrong: '0 18px 50px rgba(15, 23, 42, 0.14)',
   };
 
   const STORAGE_KEY     = 'uyapBulk:lastDownload';
@@ -41,173 +41,163 @@
   const CSS = `
   #uyap-bulk-root, #uyap-bulk-root *,
   #uyap-bulk-root *::before, #uyap-bulk-root *::after { box-sizing: border-box; }
+  #uyap-bulk-root {
+    position: relative;
+    z-index: 2147483000;
+    isolation: isolate;
+  }
 
   .uyap-bulk-fab {
-    position: fixed; left: 20px; bottom: 20px; z-index: 2147483646;
-    display: inline-flex; align-items: center; gap: 9px;
-    background: linear-gradient(135deg, #0b3d91 0%, #1e88e5 55%, #42a5f5 100%);
-    background-size: 200% 200%; background-position: 0% 0%;
-    color: #fff; border: 0; border-radius: 14px;
-    padding: 10px 16px 10px 12px;
-    font: 700 14px/1 -apple-system, "Segoe UI", Roboto, system-ui, sans-serif;
-    letter-spacing: .3px;
-    box-shadow:
-      0 4px 14px rgba(11, 61, 145, 0.30),
-      0 2px 4px rgba(11, 61, 145, 0.15),
-      inset 0 1px 0 rgba(255, 255, 255, 0.18);
-    cursor: pointer; user-select: none; opacity: 0.5;
-    transition: opacity .22s ease, transform .22s cubic-bezier(.34, 1.56, .64, 1),
-                box-shadow .22s ease, background-position .35s ease;
-    backdrop-filter: saturate(140%);
+    position: fixed; left: 20px; bottom: 20px; z-index: 2147483010;
+    display: inline-flex; align-items: center; gap: 8px;
+    background: ${C.primary}; color: #fff; border: 0; border-radius: 12px;
+    padding: 10px 14px;
+    font: 600 13px/1 -apple-system, "Segoe UI", Roboto, system-ui, sans-serif;
+    box-shadow: 0 4px 14px rgba(30, 64, 175, 0.28);
+    cursor: pointer; user-select: none; opacity: 0.52;
+    transition: opacity .18s ease, transform .18s ease, box-shadow .18s ease;
   }
   .uyap-bulk-fab:hover {
-    opacity: 1; transform: translateY(-3px) scale(1.03);
-    background-position: 100% 100%;
-    box-shadow:
-      0 10px 28px rgba(11, 61, 145, 0.42),
-      0 4px 10px rgba(11, 61, 145, 0.22),
-      inset 0 1px 0 rgba(255, 255, 255, 0.30);
+    opacity: 1; transform: translateY(-1px);
+    box-shadow: 0 6px 20px rgba(30, 64, 175, 0.35);
   }
-  .uyap-bulk-fab:active { transform: translateY(-1px) scale(0.98); }
+  .uyap-bulk-fab:active { transform: translateY(0); }
   .uyap-bulk-fab.open { opacity: 1; }
   .uyap-bulk-fab .uyap-bulk-fab-icon {
-    width: 26px; height: 26px; border-radius: 8px;
-    background: rgba(255, 255, 255, 0.16);
+    width: 24px; height: 24px; border-radius: 8px;
+    background: rgba(255, 255, 255, 0.18);
     display: inline-flex; align-items: center; justify-content: center;
-    flex: none; transition: background .2s ease, transform .25s ease;
+    flex: none;
   }
-  .uyap-bulk-fab:hover .uyap-bulk-fab-icon {
-    background: rgba(255, 255, 255, 0.26); transform: rotate(-6deg);
+  .uyap-bulk-fab .uyap-bulk-fab-plus { color: ${C.accent2}; font-weight: 800; }
+  .uyap-bulk-fab svg { width: 14px; height: 14px; fill: currentColor; }
+  .uyap-bulk-fab.uyap-bulk-fab--dock {
+    left: 20px !important; bottom: 20px !important; top: auto !important; right: auto !important;
   }
-  .uyap-bulk-fab svg { width: 16px; height: 16px; fill: currentColor; }
-  .uyap-bulk-fab .uyap-bulk-fab-plus {
-    color: #ffd54f; font-weight: 800; font-size: 16px;
-    margin-left: -2px; text-shadow: 0 0 8px rgba(255, 213, 79, 0.4);
-  }
-  @keyframes uyap-bulk-pulse {
-    0%, 100% { box-shadow: 0 4px 14px rgba(11,61,145,0.30), 0 0 0 0 rgba(30,136,229,0.55); }
-    50%      { box-shadow: 0 4px 14px rgba(11,61,145,0.30), 0 0 0 10px rgba(30,136,229,0); }
-  }
-  .uyap-bulk-fab.attention { animation: uyap-bulk-pulse 1.8s ease-in-out infinite; }
-
   .uyap-bulk-panel {
-    position: fixed; left: 24px; bottom: 88px; z-index: 2147483647;
-    width: 600px; max-width: calc(100vw - 48px);
-    max-height: 88vh;
+    position: fixed; z-index: 2147483020;
+    width: 440px; max-width: calc(100vw - 32px);
+    max-height: min(82vh, calc(100vh - 104px));
     background: ${C.bg}; color: ${C.text};
-    border: 1px solid rgba(226, 232, 240, 0.95); border-radius: 22px;
+    border: 1px solid ${C.border}; border-radius: 16px;
     box-shadow: ${C.shadowStrong};
     display: flex; flex-direction: column; overflow: hidden;
-    font: 14px/1.55 -apple-system, "Segoe UI", Roboto, "Segoe UI Variable", system-ui, sans-serif;
-    letter-spacing: -0.01em;
-    animation: uyap-bulk-fadeup .28s cubic-bezier(0.22, 1, 0.36, 1);
+    font: 13px/1.5 -apple-system, "Segoe UI", Roboto, system-ui, sans-serif;
+    animation: uyap-bulk-fadeup .22s cubic-bezier(.2,.8,.2,1);
+  }
+  .uyap-bulk-panel.uyap-bulk-panel--dock {
+    left: 16px !important; bottom: 84px !important;
+    top: auto !important; right: auto !important;
   }
   .uyap-bulk-panel[hidden] { display: none; }
 
   @keyframes uyap-bulk-fadeup {
-    from { opacity: 0; transform: translateY(8px); }
-    to   { opacity: 1; transform: translateY(0); }
+    from { opacity: 0; transform: translateY(8px) scale(.985); }
+    to   { opacity: 1; transform: translateY(0) scale(1); }
   }
 
   .uyap-bulk-header {
-    padding: 18px 22px;
-    background: linear-gradient(125deg, #071d42 0%, ${C.primary} 32%, ${C.accent} 70%, #7dd3fc 165%);
-    color: #fff;
-    display: flex; align-items: center; justify-content: space-between;
-    gap: 12px;
-    flex-shrink: 0;
+    padding: 12px 14px 11px;
+    background: ${C.bg}; color: ${C.text};
+    display: flex; align-items: flex-start; justify-content: space-between;
+    gap: 10px; flex-shrink: 0;
+    border-bottom: 1px solid ${C.border};
   }
-  .uyap-bulk-header-actions {
-    display: flex; align-items: center; gap: 4px;
-  }
+  .uyap-bulk-header-actions { display: flex; align-items: center; gap: 4px; flex-shrink: 0; }
   .uyap-bulk-pin {
-    background: rgba(255, 255, 255, .15); border: 0; color: #fff; cursor: pointer;
-    width: 28px; height: 28px; border-radius: 8px; font-size: 14px;
+    background: ${C.panel}; border: 1px solid ${C.border}; color: ${C.textSoft}; cursor: pointer;
+    width: 34px; height: 34px; border-radius: 9px; font-size: 14px;
     display: flex; align-items: center; justify-content: center;
-    transition: background .15s ease, transform .2s ease;
+    transition: background .15s ease, border-color .15s ease, color .15s ease;
   }
-  .uyap-bulk-pin:hover { background: rgba(255, 255, 255, .25); }
-  .uyap-bulk-pin.active {
-    background: ${C.yellow}; color: ${C.primary};
-    box-shadow: 0 0 12px rgba(255, 213, 79, 0.5);
-    transform: rotate(-12deg);
-  }
-  .uyap-bulk-header h3 { margin: 0; font-size: 16px; font-weight: 750; letter-spacing: -0.02em; line-height: 1.25; }
-  .uyap-bulk-header .brand { font-weight: 800; }
-  .uyap-bulk-header .brand-plus {
-    color: #ffd54f; font-weight: 800;
-    text-shadow: 0 0 8px rgba(255, 213, 79, 0.45); margin-right: 2px;
-  }
-  .uyap-bulk-header .brand-sub { font-weight: 500; opacity: .85; }
-  .uyap-bulk-header .sub { display: block; font-size: 12px; font-weight: 500; opacity: .88; margin-top: 4px; letter-spacing: 0; line-height: 1.35; }
+  .uyap-bulk-pin:hover { background: #e8ecf1; border-color: ${C.borderStrong}; color: ${C.text}; }
+  .uyap-bulk-pin.active { background: #fef3c7; border-color: #f59e0b; color: #92400e; }
+
+  .uyap-bulk-header h3 { margin: 0; font-size: 15px; font-weight: 650; line-height: 1.25; letter-spacing: -0.02em; }
+  .uyap-bulk-header .brand { font-weight: 650; color: ${C.text}; }
+  .uyap-bulk-header .brand-plus { color: ${C.accent}; font-weight: 800; }
+  .uyap-bulk-header .brand-sub { font-weight: 450; color: ${C.muted}; }
+  .uyap-bulk-header .sub { display: block; font-size: 11px; font-weight: 450; color: ${C.muted}; margin-top: 3px; }
+
   .uyap-bulk-close {
-    background: rgba(255, 255, 255, .15); border: 0; color: #fff; cursor: pointer;
-    width: 28px; height: 28px; border-radius: 8px; font-size: 18px; line-height: 1;
-    display: flex; align-items: center; justify-content: center; transition: background .15s ease;
+    background: ${C.panel}; border: 1px solid ${C.border}; color: ${C.textSoft}; cursor: pointer;
+    width: 34px; height: 34px; border-radius: 9px; font-size: 18px; line-height: 1;
+    display: flex; align-items: center; justify-content: center;
+    transition: background .15s ease, border-color .15s ease, color .15s ease;
   }
-  .uyap-bulk-close:hover { background: rgba(255, 255, 255, .28); }
+  .uyap-bulk-close:hover { background: #fee2e2; border-color: #fecaca; color: ${C.err}; }
 
   .uyap-bulk-statusbar {
-    padding: 12px 22px; background: linear-gradient(180deg, #eef2f7 0%, ${C.panel} 100%);
+    padding: 8px 14px 8px;
+    background: ${C.panel};
     border-bottom: 1px solid ${C.border};
-    display: flex; align-items: center; gap: 10px; flex-wrap: wrap;
-    font-size: 12px; color: ${C.textSoft}; font-weight: 500;
-    overflow-x: auto; flex-shrink: 0;
+    display: flex; flex-direction: column; gap: 6px;
+    font-size: 11.5px; color: ${C.textSoft}; flex-shrink: 0;
+  }
+  .uyap-bulk-statusbar-main {
+    display: flex; flex-wrap: wrap; align-items: center; gap: 6px;
+    row-gap: 6px;
+  }
+  .uyap-bulk-statusbar-hint {
+    display: flex; justify-content: flex-end; align-items: center;
+    padding-top: 1px;
   }
   .uyap-bulk-statusbar .pill {
-    display: inline-flex; align-items: center; gap: 6px;
-    padding: 6px 12px; border-radius: 999px;
-    background: #fff; border: 1px solid rgba(226, 232, 240, 0.9);
-    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
-    white-space: nowrap;
+    display: inline-flex; align-items: center; gap: 5px;
+    padding: 4px 9px; border-radius: 999px;
+    background: ${C.bg}; border: 1px solid ${C.border};
+    max-width: 100%;
+    font-size: 11.5px; line-height: 1.3;
   }
   .uyap-bulk-statusbar .pill.active { background: ${C.accent}; color: #fff; border-color: ${C.accent}; }
-  .uyap-bulk-statusbar .pill.warn   { background: #fef3c7; color: #92400e; border-color: #fde68a; }
-  .uyap-bulk-statusbar .pill .dot {
-    width: 6px; height: 6px; border-radius: 50%; background: currentColor;
+  .uyap-bulk-statusbar .pill.warn   { background: #fffbeb; color: #b45309; border-color: #fde68a; }
+  .uyap-bulk-statusbar .pill .dot { width: 5px; height: 5px; border-radius: 50%; background: currentColor; opacity: .9; }
+  .uyap-bulk-statusbar .status-hint {
+    font-size: 10.5px; color: ${C.muted};
+    display: inline-flex; align-items: center; gap: 4px;
   }
   .uyap-bulk-statusbar kbd {
-    background: ${C.bg}; border: 1px solid ${C.border}; border-bottom-width: 2px;
-    border-radius: 5px; padding: 1px 5px; font: 10.5px ui-monospace, monospace;
-    color: ${C.textSoft};
+    background: ${C.bg}; border: 1px solid ${C.border}; border-radius: 4px;
+    padding: 1px 5px; font: 10px ui-monospace, monospace; color: ${C.textSoft};
+    box-shadow: 0 1px 0 rgba(15,23,42,.06);
   }
 
   .uyap-bulk-body {
-    padding: 20px 22px 24px; overflow: auto; flex: 1; min-height: 0;
-    background:
-      linear-gradient(180deg, rgba(255,255,255,0.65) 0%, transparent 120px),
-      linear-gradient(160deg, #e8eef6 0%, ${C.panel} 45%, #f1f5f9 100%);
-    display: flex; flex-direction: column; gap: 16px;
+    padding: 12px 14px 14px; overflow: auto; flex: 1; min-height: 0;
+    background: ${C.panel};
+    display: flex; flex-direction: column; gap: 10px;
   }
 
   .uyap-bulk-footer {
-    padding: 16px 22px 18px; background: linear-gradient(180deg, #fafbfc 0%, ${C.bg} 35%);
+    padding: 10px 12px 12px; background: ${C.bg};
     border-top: 1px solid ${C.border};
-    display: flex; flex-wrap: wrap; gap: 10px; align-items: center; justify-content: flex-end;
-    flex-shrink: 0;
-    box-shadow: 0 -6px 24px -12px rgba(15, 23, 42, 0.08);
+    display: flex; flex-wrap: wrap; gap: 8px; align-items: center;
+    justify-content: space-between; flex-shrink: 0;
   }
-  .uyap-bulk-footer .uyap-bulk-btn:first-of-type { margin-right: auto; }
+  .uyap-bulk-footer-trailing {
+    display: flex; flex-wrap: wrap; gap: 6px; align-items: center;
+    justify-content: flex-end; flex: 1; min-width: 0;
+  }
 
   .uyap-bulk-row {
-    display: flex; justify-content: space-between; align-items: center;
-    padding: 12px 0; gap: 14px; flex-wrap: wrap;
-    min-height: 44px;
+    display: grid; grid-template-columns: 1fr auto; align-items: center;
+    padding: 8px 0; gap: 10px 14px;
+    min-height: unset;
   }
-  .uyap-bulk-row + .uyap-bulk-row { border-top: 1px solid rgba(226, 232, 240, 0.85); }
-  .uyap-bulk-row label { color: ${C.textSoft}; flex: 1; min-width: 140px; font-weight: 550; line-height: 1.35; }
-  .uyap-bulk-row strong { color: ${C.text}; font-size: 15px; font-weight: 700; }
+  .uyap-bulk-row + .uyap-bulk-row { border-top: 1px solid ${C.border}; }
+  .uyap-bulk-row label { color: ${C.textSoft}; font-weight: 500; font-size: 12.5px; }
+  .uyap-bulk-row strong { color: ${C.text}; font-size: 13px; font-weight: 600; justify-self: end; text-align: right; }
 
   .uyap-bulk-row input[type=number] {
-    width: 92px; padding: 8px 11px;
-    border: 1px solid ${C.border}; border-radius: 7px;
+    width: 88px; padding: 7px 10px;
+    border: 1px solid ${C.border}; border-radius: 8px;
     font: inherit; color: ${C.text}; background: ${C.bg};
     transition: border-color .15s ease, box-shadow .15s ease;
   }
   .uyap-bulk-row input[type=text],
   .uyap-bulk-row input[type=date] {
-    padding: 8px 12px; border: 1px solid ${C.border}; border-radius: 10px;
-    font: inherit; color: ${C.text}; background: ${C.bg}; width: min(100%, 200px);
+    padding: 7px 10px; border: 1px solid ${C.border}; border-radius: 8px;
+    font: inherit; color: ${C.text}; background: ${C.bg}; width: min(100%, 190px);
     transition: border-color .15s ease, box-shadow .15s ease;
   }
   .uyap-bulk-row input[type=number]:focus,
@@ -231,58 +221,57 @@
   .uyap-bulk-row input[type=checkbox]:checked { background: ${C.accent}; }
   .uyap-bulk-row input[type=checkbox]:checked::after { transform: translateX(16px); }
   .uyap-bulk-row select {
-    padding: 8px 12px; border: 1px solid ${C.border}; border-radius: 10px;
-    font: inherit; color: ${C.text}; background: ${C.bg}; cursor: pointer; min-width: 200px;
+    padding: 7px 10px; border: 1px solid ${C.border}; border-radius: 8px;
+    font: inherit; color: ${C.text}; background: ${C.bg}; cursor: pointer; min-width: 188px;
     transition: border-color .15s ease, box-shadow .15s ease;
   }
 
   .uyap-bulk-section {
-    border: 1px solid rgba(226, 232, 240, 0.95); border-radius: 16px;
+    border: 1px solid ${C.border}; border-radius: 12px;
     background: ${C.surface};
     margin: 0; overflow: hidden;
-    box-shadow: ${C.shadow};
-    transition: box-shadow .22s ease, border-color .2s ease, transform .2s ease;
+    box-shadow: none;
   }
-  .uyap-bulk-section:hover { border-color: rgba(148, 163, 184, 0.35); }
-  .uyap-bulk-section.open {
-    box-shadow: 0 8px 32px -8px rgba(37, 99, 235, 0.12), 0 4px 16px -4px rgba(15, 23, 42, 0.08);
-    border-color: rgba(147, 197, 253, 0.55);
-  }
+  .uyap-bulk-section.open { border-color: #c7ced9; }
   .uyap-bulk-section-head {
-    padding: 15px 18px; cursor: pointer; user-select: none;
-    background: linear-gradient(180deg, #ffffff 0%, #f8fafc 100%);
+    padding: 10px 12px; cursor: pointer; user-select: none;
+    background: ${C.surface};
     display: flex; justify-content: space-between; align-items: center;
-    font-weight: 650; font-size: 14px; color: ${C.text};
-    transition: background .15s ease;
+    font-weight: 600; font-size: 12.5px; color: ${C.text};
+    letter-spacing: -0.01em;
+    position: relative;
   }
-  .uyap-bulk-section-head:hover { background: linear-gradient(180deg, #fafbfc 0%, #f1f5f9 100%); }
+  .uyap-bulk-section-head:hover { background: #f8fafc; }
   .uyap-bulk-section-head .head-left {
-    display: inline-flex; align-items: center; gap: 9px;
+    display: inline-flex; align-items: center; gap: 8px; min-width: 0; flex: 1;
+  }
+  .uyap-bulk-section-head .head-title {
+    overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    min-width: 0;
   }
   .uyap-bulk-section-head .head-icon {
-    width: 34px; height: 34px; border-radius: 11px;
-    background: linear-gradient(145deg, ${C.accent} 0%, ${C.primary} 100%); color: #fff;
+    width: 30px; height: 30px; border-radius: 9px;
+    background: ${C.panel}; color: ${C.accent};
     display: inline-flex; align-items: center; justify-content: center;
-    font-size: 15px; flex: none;
-    box-shadow: 0 3px 10px -2px rgba(37, 99, 235, 0.45);
+    font-size: 13px; flex: none; border: none;
   }
   .uyap-bulk-section-head .chev {
-    color: ${C.muted}; transition: transform .25s ease; font-size: 10px;
+    color: ${C.muted}; transition: transform .2s ease; font-size: 9px; flex: none;
+    opacity: .75; width: 1.25em; text-align: center;
   }
   .uyap-bulk-section.open .uyap-bulk-section-head .chev { transform: rotate(90deg); }
   .uyap-bulk-section.open .uyap-bulk-section-head {
+    background: #fafbfc;
     border-bottom: 1px solid ${C.border};
   }
-  .uyap-bulk-section-body { padding: 6px 18px 20px; display: none; }
+  .uyap-bulk-section-body { padding: 2px 12px 12px; display: none; }
   .uyap-bulk-section.open .uyap-bulk-section-body { display: block; }
 
-  .uyap-bulk-opt { margin: 4px 0 10px; }
-  .uyap-bulk-opt:last-child { margin-bottom: 2px; }
+  .uyap-bulk-opt { margin: 2px 0 8px; }
+  .uyap-bulk-opt:last-child { margin-bottom: 0; }
   .uyap-bulk-opt-sub {
-    padding: 14px 16px; margin-top: 10px; margin-bottom: 4px;
-    background: linear-gradient(180deg, rgba(248,250,252,1) 0%, rgba(241,245,249,0.92) 100%);
-    border-radius: 12px; border: 1px solid ${C.border};
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.8);
+    padding: 10px 12px; margin-top: 8px;
+    background: #f8fafc; border-radius: 10px; border: 1px solid ${C.border};
   }
   .uyap-bulk-section-head .badge {
     background: ${C.accent}; color: #fff; font-size: 10.5px; font-weight: 700;
@@ -291,95 +280,62 @@
   }
 
   .uyap-bulk-hint {
-    font-size: 12.5px; color: ${C.muted}; padding: 8px 0 10px; line-height: 1.55;
+    font-size: 12px; color: ${C.muted}; padding: 6px 0 8px; line-height: 1.45;
   }
 
-  .uyap-bulk-body-wrap {
-    display: flex; flex-direction: column; gap: 10px;
-  }
   .uyap-bulk-monitor {
-    padding: 18px 18px 16px;
-    background: linear-gradient(180deg, #ffffff 0%, #fafbfc 100%);
-    border: 1px solid rgba(226, 232, 240, 0.95);
-    border-radius: 16px;
-    box-shadow: ${C.shadow};
-  }
-  .uyap-bulk-monitor-head {
-    display: flex; justify-content: space-between; align-items: baseline;
-    margin-bottom: 12px;
-  }
-  .uyap-bulk-monitor-title {
-    font-size: 13px; font-weight: 700; color: ${C.text}; letter-spacing: -0.02em;
-  }
-  .uyap-bulk-monitor-sub {
-    font-size: 11px; color: ${C.muted}; font-weight: 500;
-  }
-  .uyap-bulk-log-title {
-    font-size: 10px; font-weight: 800; text-transform: uppercase; letter-spacing: 0.08em;
-    color: ${C.muted}; margin: 14px 2px 8px;
+    padding: 10px 12px;
+    background: ${C.surface};
+    border: 1px solid ${C.border}; border-radius: 12px;
+    box-shadow: none;
   }
   .uyap-bulk-hint b { color: ${C.warn}; font-weight: 600; }
 
   .uyap-bulk-btn {
-    padding: 10px 16px; border: 0; border-radius: 11px;
-    background: linear-gradient(180deg, ${C.accent} 0%, ${C.primary} 100%); color: #fff;
-    font: 600 13.5px -apple-system, "Segoe UI", Roboto, system-ui, sans-serif;
-    cursor: pointer; transition: transform .12s ease, box-shadow .15s ease, filter .15s ease;
+    padding: 9px 14px; border: 0; border-radius: 8px;
+    background: ${C.accent}; color: #fff;
+    font: 600 13px -apple-system, "Segoe UI", Roboto, system-ui, sans-serif;
+    cursor: pointer; transition: background .12s ease, opacity .12s ease;
     white-space: nowrap;
-    box-shadow: 0 2px 6px -2px rgba(11, 61, 145, 0.4),
-                inset 0 1px 0 rgba(255, 255, 255, 0.15);
   }
-  .uyap-bulk-btn:hover:not([disabled]) {
-    transform: translateY(-1px);
-    box-shadow: 0 6px 14px -4px rgba(11, 61, 145, 0.45),
-                inset 0 1px 0 rgba(255, 255, 255, 0.20);
-    filter: brightness(1.05);
-  }
-  .uyap-bulk-btn:active:not([disabled]) { transform: translateY(0); filter: brightness(0.96); }
+  .uyap-bulk-btn:hover:not([disabled]) { background: ${C.primary}; }
+  .uyap-bulk-btn:active:not([disabled]) { opacity: .92; }
   .uyap-bulk-btn[disabled] { opacity: .5; cursor: not-allowed; box-shadow: none; }
   .uyap-bulk-btn.ghost {
     background: ${C.bg}; color: ${C.text}; border: 1px solid ${C.border};
     box-shadow: none;
   }
   .uyap-bulk-btn.ghost:hover:not([disabled]) {
-    background: ${C.panel}; border-color: ${C.borderStrong};
-    transform: translateY(-1px); box-shadow: 0 2px 6px -2px rgba(15, 23, 42, 0.10);
-    filter: none;
+    background: ${C.panel}; border-color: #9ca3af;
   }
-  .uyap-bulk-btn.primary {
-    background: linear-gradient(180deg, ${C.primary} 0%, ${C.primaryHover} 100%);
-  }
-  .uyap-bulk-btn.success {
-    background: linear-gradient(180deg, ${C.ok} 0%, #059669 100%);
-    box-shadow: 0 2px 6px -2px rgba(16, 185, 129, 0.4);
-  }
+  .uyap-bulk-btn.primary { background: ${C.primary}; }
+  .uyap-bulk-btn.primary:hover:not([disabled]) { background: ${C.primaryHover}; }
+  .uyap-bulk-btn.success { background: ${C.ok}; }
+  .uyap-bulk-btn.success:hover:not([disabled]) { background: #059669; }
   .uyap-bulk-btn.flex { flex: 1; }
-  .uyap-bulk-btn.small { padding: 7px 12px; font-size: 12px; border-radius: 9px; }
+  .uyap-bulk-btn.small { padding: 6px 11px; font-size: 12px; border-radius: 8px; }
   .uyap-bulk-btn .kbd-hint {
     margin-left: 6px; padding: 1px 5px; border-radius: 4px;
     background: rgba(255,255,255,.22); font: 10px ui-monospace, monospace;
   }
 
   .uyap-bulk-progress {
-    height: 8px; background: #e2e8f0; border-radius: 999px; overflow: hidden;
-    margin-top: 4px; box-shadow: inset 0 1px 3px rgba(15, 23, 42, 0.06);
+    height: 4px; background: #e2e8f0; border-radius: 999px; overflow: hidden; margin-top: 0;
   }
   .uyap-bulk-progress > div {
-    height: 100%; background: linear-gradient(90deg, ${C.accent}, ${C.ok});
-    width: 0%; transition: width .3s ease;
+    height: 100%; background: ${C.accent};
+    width: 0%; transition: width .28s ease;
   }
   .uyap-bulk-progress-label {
-    font-size: 11px; color: ${C.muted}; padding-top: 4px; text-align: center;
+    font-size: 10.5px; color: ${C.muted}; padding: 8px 0 0; text-align: left;
   }
 
   .uyap-bulk-log {
-    margin-top: 0; padding: 14px 16px;
-    background: linear-gradient(165deg, #0d1524 0%, ${C.logBg} 45%);
-    color: ${C.logText};
-    border-radius: 14px; max-height: 220px; min-height: 72px; overflow: auto;
-    font: 12px/1.55 ui-monospace, "Cascadia Mono", Consolas, "SF Mono", monospace;
-    border: 1px solid rgba(148, 163, 184, 0.2);
-    box-shadow: inset 0 1px 0 rgba(255,255,255,0.06), 0 8px 24px -8px rgba(0,0,0,0.35);
+    margin-top: 8px; padding: 9px 11px;
+    background: ${C.logBg}; color: ${C.logText};
+    border-radius: 10px; max-height: 132px; min-height: 48px; overflow: auto;
+    font: 11px/1.5 ui-monospace, Consolas, monospace;
+    border: 1px solid #334155;
   }
   .uyap-bulk-log .line { margin: 1px 0; word-break: break-word; }
   .uyap-bulk-log .ok   { color: #4ec97a; }
@@ -393,14 +349,13 @@
 
   /* Önizleme listesi */
   .uyap-bulk-list {
-    margin-top: 10px; max-height: min(42vh, 400px); overflow: auto;
-    border: 1px solid ${C.border}; border-radius: 14px; background: #fff;
-    box-shadow: inset 0 1px 2px rgba(15, 23, 42, 0.04);
+    margin-top: 6px; max-height: min(34vh, 300px); overflow: auto;
+    border: 1px solid ${C.border}; border-radius: 10px; background: ${C.bg};
   }
   .uyap-bulk-list-item {
-    padding: 12px 14px; border-bottom: 1px solid #ecedee;
-    display: grid; grid-template-columns: 28px 1fr auto auto;
-    gap: 12px; align-items: center; font-size: 13px;
+    padding: 10px 12px; border-bottom: 1px solid ${C.border};
+    display: grid; grid-template-columns: 26px 1fr auto auto;
+    gap: 10px; align-items: center; font-size: 12px;
   }
   .uyap-bulk-list-item:last-child { border-bottom: 0; }
   .uyap-bulk-list-item:hover { background: #f8f9fa; }
@@ -427,10 +382,11 @@
   .uyap-bulk-list-item.excluded { opacity: 0.4; background: #fbfbfb; }
 
   .uyap-bulk-list-toolbar {
-    padding: 12px 14px; background: linear-gradient(180deg, #f8fafc 0%, #f1f5f9 100%);
+    padding: 8px 10px; background: rgba(255,255,255,.96);
     border-bottom: 1px solid ${C.border};
-    display: flex; gap: 8px; align-items: center; flex-wrap: wrap; font-size: 12px;
-    position: sticky; top: 0; z-index: 2;
+    display: flex; gap: 6px; align-items: center; flex-wrap: wrap; font-size: 11.5px;
+    position: sticky; top: 0; z-index: 1;
+    backdrop-filter: blur(6px);
   }
   .uyap-bulk-list-toolbar .count { color: ${C.muted}; margin-left: auto; }
 
@@ -461,12 +417,11 @@
   }
   .uyap-bulk-chip {
     display: inline-flex; align-items: center; gap: 4px;
-    padding: 6px 12px; border-radius: 999px;
-    background: #fff; border: 1px solid ${C.border};
-    font-size: 12px; cursor: pointer; user-select: none;
-    box-shadow: 0 1px 2px rgba(15, 23, 42, 0.04);
+    padding: 5px 11px; border-radius: 999px;
+    background: ${C.bg}; border: 1px solid ${C.border};
+    font-size: 11.5px; cursor: pointer; user-select: none;
   }
-  .uyap-bulk-chip:hover { background: #f1f3f4; }
+  .uyap-bulk-chip:hover { background: #f1f5f9; }
   .uyap-bulk-chip.active { background: ${C.accent}; color: #fff; border-color: ${C.accent}; }
 
   .uyap-bulk-divider {
@@ -475,7 +430,7 @@
 
   /* ====== Komut Paleti ====== */
   .uyap-bulk-palette-backdrop {
-    position: fixed; inset: 0; z-index: 2147483647;
+    position: fixed; inset: 0; z-index: 2147483100;
     background: rgba(15, 23, 42, 0.55); backdrop-filter: blur(6px);
     display: flex; align-items: flex-start; justify-content: center;
     padding-top: 14vh; animation: uyap-bulk-fadein .15s ease;
@@ -543,7 +498,7 @@
 
   /* ====== Tooltip ====== */
   .uyap-bulk-tooltip {
-    position: fixed; z-index: 2147483646;
+    position: fixed; z-index: 2147483035;
     background: ${C.text}; color: #fff;
     padding: 8px 11px; border-radius: 8px;
     font-size: 11.5px; line-height: 1.5;
@@ -567,7 +522,7 @@
 
   /* ====== Notes Popup ====== */
   .uyap-bulk-note-pop {
-    position: fixed; z-index: 2147483647;
+    position: fixed; z-index: 2147483040;
     background: ${C.bg}; border: 1px solid ${C.border}; border-radius: 12px;
     box-shadow: 0 16px 40px -8px rgba(0,0,0,0.3);
     width: 320px; padding: 12px;
@@ -611,7 +566,7 @@
 
   /* ====== Selection Toolbar (PTT sorgulama) ====== */
   .uyap-bulk-seltool {
-    position: fixed; z-index: 2147483647;
+    position: fixed; z-index: 2147483045;
     background: ${C.text}; color: #fff;
     border-radius: 10px; padding: 4px;
     display: inline-flex; align-items: center; gap: 2px;
@@ -836,14 +791,14 @@
     if (document.getElementById('uyap-bulk-root')) return;
 
     /* ---- FAB ---- */
-    const fab = el('button', { class: 'uyap-bulk-fab', title: 'Uyap+ — Toplu Evrak İndirici',
+    const fab = el('button', { class: 'uyap-bulk-fab uyap-bulk-fab--dock', title: 'Uyap+ — Toplu Evrak İndirici',
       html:
         `<span class="uyap-bulk-fab-icon"><svg viewBox="0 0 24 24" aria-hidden="true">
            <path d="M12 3v10.55l3.6-3.6 1.4 1.4-6 6-6-6 1.4-1.4 3.6 3.6V3h2zm-7 16h14v2H5v-2z"/>
          </svg></span>
          <span>Uyap<span class="uyap-bulk-fab-plus">+</span></span>` });
 
-    const panel = el('div', { class: 'uyap-bulk-panel', hidden: true });
+    const panel = el('div', { class: 'uyap-bulk-panel uyap-bulk-panel--dock', hidden: true });
 
     /* ---- Header ---- */
     UI.pinBtn = el('button', { class: 'uyap-bulk-pin' + (state.pinned ? ' active' : ''),
@@ -859,7 +814,7 @@
       el('div', { style: 'min-width: 0; flex: 1;' },
         el('h3', {}, el('span', { class: 'brand' }, 'Uyap'), el('span', { class: 'brand-plus' }, '+'),
           el('span', { class: 'brand-sub' }, ' Toplu Evrak İndirici')),
-        el('span', { class: 'sub' }, 'v2.1 — komut paleti, sürüklenebilir FAB, notlar')),
+        el('span', { class: 'sub' }, 'v2.3.3 · Ctrl+K komut paleti')),
       el('div', { class: 'uyap-bulk-header-actions' },
         UI.pinBtn,
         el('button', { class: 'uyap-bulk-close', title: 'Kapat (Esc)' }, '×')
@@ -1035,28 +990,25 @@
     UI.logBox = el('div', { class: 'uyap-bulk-log' });
 
     body.appendChild(el('div', { class: 'uyap-bulk-monitor' },
-      el('div', { class: 'uyap-bulk-monitor-head' },
-        el('span', { class: 'uyap-bulk-monitor-title' }, 'İlerleme'),
-        el('span', { class: 'uyap-bulk-monitor-sub' }, 'Günlük aşağıda')
-      ),
       el('div', { class: 'uyap-bulk-progress' }, UI.progressBar),
       UI.progressLabel,
-      el('div', { class: 'uyap-bulk-log-title' }, 'Günlük'),
       UI.logBox,
     ));
 
     /* --- Footer buttons --- */
     UI.scanBtn = el('button', { class: 'uyap-bulk-btn ghost flex', onclick: onScan }, 'Tara');
     UI.saveLogBtn = el('button', { class: 'uyap-bulk-btn ghost small', onclick: saveLog }, 'Log Kaydet');
-    UI.startBtn = el('button', { class: 'uyap-bulk-btn flex', disabled: true, onclick: onStart }, 'İndirmeyi Başlat');
+    UI.startBtn = el('button', { class: 'uyap-bulk-btn primary flex', disabled: true, onclick: onStart }, 'İndirmeyi Başlat');
 
     /* ---- Status bar ---- */
     UI.statusBar = el('div', { class: 'uyap-bulk-statusbar' });
 
     UI.paletteBtn = el('button', { class: 'uyap-bulk-btn ghost small', onclick: openPalette,
-      title: 'Komut paleti (Ctrl+K)' }, '⌘ Komut');
+      title: 'Komut paleti (Ctrl+K)' }, 'Komutlar');
     const footer = el('div', { class: 'uyap-bulk-footer' },
-      UI.paletteBtn, UI.scanBtn, UI.saveLogBtn, UI.startBtn);
+      UI.paletteBtn,
+      el('div', { class: 'uyap-bulk-footer-trailing' },
+        UI.scanBtn, UI.saveLogBtn, UI.startBtn));
 
     panel.appendChild(header);
     panel.appendChild(UI.statusBar);
@@ -1116,7 +1068,7 @@
     const head = el('div', { class: 'uyap-bulk-section-head' },
       el('span', { class: 'head-left' },
         el('span', { class: 'head-icon' }, icon || '•'),
-        el('span', {}, title)
+        el('span', { class: 'head-title' }, title)
       ),
       el('span', {}, el('span', { class: 'chev' }, '▶'))
     );
@@ -2108,6 +2060,29 @@
   }
 
   /* ============================== DRAG FAB ============================== */
+  function syncFabDockClass() {
+    if (!UI.fab) return;
+    if (state.fabPos) UI.fab.classList.remove('uyap-bulk-fab--dock');
+    else UI.fab.classList.add('uyap-bulk-fab--dock');
+  }
+
+  function applyPanelPlacement() {
+    if (!UI.panel || UI.panel.hidden) return;
+    if (state.fabPos) {
+      UI.panel.classList.remove('uyap-bulk-panel--dock');
+      requestAnimationFrame(() => {
+        repositionPanelNearFab();
+        requestAnimationFrame(repositionPanelNearFab);
+      });
+    } else {
+      UI.panel.classList.add('uyap-bulk-panel--dock');
+      UI.panel.style.removeProperty('left');
+      UI.panel.style.removeProperty('top');
+      UI.panel.style.removeProperty('bottom');
+      UI.panel.style.removeProperty('right');
+    }
+  }
+
   function applyFabPos() {
     if (!UI.fab) return;
     if (state.fabPos && state.fabPos.left != null && state.fabPos.top != null) {
@@ -2115,25 +2090,34 @@
       UI.fab.style.top  = state.fabPos.top + 'px';
       UI.fab.style.bottom = 'auto';
       UI.fab.style.right  = 'auto';
-      repositionPanel();
+    } else {
+      UI.fab.style.removeProperty('left');
+      UI.fab.style.removeProperty('top');
+      UI.fab.style.removeProperty('bottom');
+      UI.fab.style.removeProperty('right');
     }
+    syncFabDockClass();
+    applyPanelPlacement();
   }
 
-  function repositionPanel() {
-    if (!UI.fab || !UI.panel) return;
+  function repositionPanelNearFab() {
+    if (!UI.fab || !UI.panel || UI.panel.hidden) return;
+    if (UI.panel.classList.contains('uyap-bulk-panel--dock')) return;
     const fabRect = UI.fab.getBoundingClientRect();
-    const panelHeight = Math.min(window.innerHeight * 0.84, 700);
-    const panelWidth = 600;
-    let top = fabRect.top - panelHeight - 12;
+    const gap = 14;
+    const w = UI.panel.offsetWidth || 440;
+    const h = Math.min(UI.panel.offsetHeight || 380, window.innerHeight - 24);
+    let top = fabRect.top - h - gap;
     let left = fabRect.left;
-    if (top < 12) top = fabRect.bottom + 12;
-    if (top + panelHeight > window.innerHeight - 12) top = Math.max(12, window.innerHeight - panelHeight - 12);
-    if (left + panelWidth > window.innerWidth - 12) left = window.innerWidth - panelWidth - 12;
+    if (top < 12) top = fabRect.bottom + gap;
+    const maxTop = window.innerHeight - h - 12;
+    if (top > maxTop) top = Math.max(12, maxTop);
+    if (left + w > window.innerWidth - 12) left = window.innerWidth - w - 12;
     if (left < 12) left = 12;
     UI.panel.style.left = left + 'px';
-    UI.panel.style.top  = top + 'px';
+    UI.panel.style.top = top + 'px';
     UI.panel.style.bottom = 'auto';
-    UI.panel.style.right  = 'auto';
+    UI.panel.style.right = 'auto';
   }
 
   function setupDraggableFab(fab) {
@@ -2153,13 +2137,15 @@
       const dx = e.clientX - startX, dy = e.clientY - startY;
       if (!didDrag && Math.hypot(dx, dy) > 4) didDrag = true;
       if (!didDrag) return;
+      fab.classList.remove('uyap-bulk-fab--dock');
+      UI.panel?.classList.remove('uyap-bulk-panel--dock');
       const newLeft = Math.max(8, Math.min(window.innerWidth - fab.offsetWidth - 8, startLeft + dx));
       const newTop  = Math.max(8, Math.min(window.innerHeight - fab.offsetHeight - 8, startTop + dy));
       fab.style.left = newLeft + 'px';
       fab.style.top  = newTop + 'px';
       fab.style.bottom = 'auto';
       fab.style.right  = 'auto';
-      if (UI.panel && !UI.panel.hidden) repositionPanel();
+      if (UI.panel && !UI.panel.hidden) repositionPanelNearFab();
     });
     document.addEventListener('mouseup', () => {
       if (!dragging) return;
@@ -2170,10 +2156,12 @@
         state.fabPos = { left: rect.left, top: rect.top };
         savePersistedFabPos();
         fab._uyapWasDragging = true;
+        syncFabDockClass();
+        applyPanelPlacement();
       }
     });
     window.addEventListener('resize', () => {
-      if (UI.panel && !UI.panel.hidden) repositionPanel();
+      if (UI.panel && !UI.panel.hidden) applyPanelPlacement();
     });
   }
 
@@ -2187,19 +2175,23 @@
       ? `📁 ${dosya.esas}${dosya.mahkeme ? ' — ' + dosya.mahkeme.slice(0, 28) : ''}`
       : '📁 Dosya açık değil';
 
-    UI.statusBar.appendChild(el('span', { class: 'pill', title: dosya.raw || '' }, dosyaText));
+    const mainRow = el('div', { class: 'uyap-bulk-statusbar-main' });
+    mainRow.appendChild(el('span', { class: 'pill', title: dosya.raw || '' }, dosyaText));
 
     if (state.scanned.length) {
-      UI.statusBar.appendChild(el('span', { class: 'pill active' },
+      mainRow.appendChild(el('span', { class: 'pill active' },
         el('span', { class: 'dot' }), `${state.filtered.length} / ${state.scanned.length} evrak`));
     }
 
     if (state.queue.length) {
-      UI.statusBar.appendChild(el('span', { class: 'pill warn' }, `🗂 Kuyrukta ${state.queue.length} dosya`));
+      mainRow.appendChild(el('span', { class: 'pill warn' }, `🗂 Kuyrukta ${state.queue.length} dosya`));
     }
 
-    const tipBox = el('span', { style: 'margin-left: auto; display: inline-flex; gap: 4px; align-items: center;' },
-      el('kbd', {}, 'Ctrl'), '+', el('kbd', {}, 'K'), el('span', { style: 'margin-left: 4px;' }, 'komut paleti'));
+    UI.statusBar.appendChild(mainRow);
+
+    const tipBox = el('div', { class: 'uyap-bulk-statusbar-hint' },
+      el('span', { class: 'status-hint' },
+        el('kbd', {}, 'Ctrl'), el('kbd', {}, 'K'), el('span', {}, 'Komut paleti')));
     UI.statusBar.appendChild(tipBox);
   }
 
@@ -2218,9 +2210,9 @@
       { id: 'pin', icon: '📌', title: (state.pinned ? '☑ ' : '☐ ') + 'Paneli Sabitle', sub: 'Sayfa yenilense de açık kalsın', action: () => UI.pinBtn.click() },
       { id: 'reset-filters', icon: '↻', title: 'Filtreleri Sıfırla', sub: 'Tüm aktif filtreleri kapat', action: resetFilters },
       { id: 'reset-fab', icon: '⟲', title: 'Butonu varsayılan konuma al', sub: 'Sol alt köşeye geri taşı', action: () => {
-        state.fabPos = null; try { localStorage.removeItem(STORAGE_FAB_POS); } catch {}
-        UI.fab.style.left = ''; UI.fab.style.top = ''; UI.fab.style.right = ''; UI.fab.style.bottom = '';
-        if (UI.panel && !UI.panel.hidden) repositionPanel();
+        state.fabPos = null;
+        try { localStorage.removeItem(STORAGE_FAB_POS); } catch {}
+        applyFabPos();
       } },
       { id: 'ptt-query', icon: '📮', title: 'PTT\'de Tebligat Sorgula', sub: 'Barkod girip yeni sekmede sorgu başlatır', action: () => {
         const barcode = prompt('Tebligat barkod numarasını gir:');
